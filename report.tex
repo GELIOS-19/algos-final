@@ -205,7 +205,34 @@ How does the above logic tie into matrix multiplication? Well, it might be intut
             t & \mathrm{dist}_{t \to s} & \mathrm{dist}_{t \to k} & \mathrm{dist}_{t \to t} \cr
         }
     \]
+
+    \[
+        u =
+        \begin{bmatrix}
+            \mathrm{dist}_{s \to s} & \mathrm{dist}_{s \to k} & \mathrm{dist}_{s \to t}
+        \end{bmatrix}
+        \quad
+        v =
+        \begin{bmatrix}
+            \mathrm{dist}_{s \to t} \\
+            \mathrm{dist}_{k \to t} \\
+            \mathrm{dist}_{t \to t}
+        \end{bmatrix}
+    \]
+
+    Let's see what happens when we take the dot product of $u$ and $v$, which will be the $(s, t)$ entry of the matrix $A^2$:
+
+    \begin{eqnarray}
+        A^2_{(s,t)}
+        &= \mathrm{dist}_{s \to s} \times \mathrm{dist}_{s \to t} \\
+        &+ \; \mathrm{dist}_{s \to k} \times \mathrm{dist}_{k \to t} \\
+        &+ \; \mathrm{dist}_{s \to t} \times \mathrm{dist}_{t \to t}
+    \end{eqnarray}
+
+    Based on the dot product formula, it seems that in the $(s, t)$ entry of the matrix $A^2$, we are able to calculate some information involving all paths from node $s$ to node $t$ involving one intermediate step through all the other nodes in the graph. Particularly, the product on line $(1)$ gives us information regarding the path $s \to s \to t$, the product on line $(2)$ gives us information regarding the path $s \to k \to t$, and the product on line $(3)$ gives us information regarding the path $s \to t \to t$. You may notice the paths $s \to s \to t$ and $s \to t \to t$ are simply the same as the path $s \to t$, a direct path from $s$ to $t$ with no intermediate nodes. It may become apparant to you that by induction, the matrix $(A^2)^2_{(s, t)}$ stores the shortest path between $s \to t$, $s \to k \to t$ for all graph vertices $k$, and $s \to l \to m \to t$ for all combinations of nodes $l$ and $m$ in the graph. We can say that the adjacency matrix $(A^2)^n_{(s, t)}$ stores the shortest path from $s$ to $t$ using \emph{up to} $n$ intermediate vertices.
 \end{quote}
+
+As shown in the above analogy, we are essentially able to store the result of a dot product operation between the path lengths of $s \to t$ and $s \to k \to t$ for every intermediate node $k$ in the graph. As we explained earlier during our discussion of Floyd-Warshall's algorithm, we specifically need to compute the minimum cost path between all the aforementioned products from the dot product calculation. In the next section, we will show how we can override the standard $+$ and $\times$ operations such that simply computing the squares of adjacency matrices allows us to solve \texttt{APSP}, and we will also explain how other properties of enviornments with overriden $+$ and $\times$ operations may help us solve \texttt{APSP} more efficiently.
 
 \subsection{Abstract Algebra Overview and Ring Operations}
 \subsection{Polynomial Matrices}
