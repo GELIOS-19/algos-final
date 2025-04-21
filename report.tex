@@ -125,9 +125,52 @@ Additionally, we will be extending this theorem using Sankowski's paper:
 \end{enumerate}
 \emph{All operations succeed with high probability over the random choices.}
 
+We will be covering general overviews of topics that help toward understanding the intuition behind these theorems in the next section.
+
 \section{Technical Background}
+
+\subsection{Matrix Multiplication Recap and Naive APSP}
+
+Matrix multiplication is an important concept that we will be making extensive use of to understand the technical components in this report. You are already familiar with the basic method of multiplying two matrices with the same inner dimension, where you multiply the $n$-th row of the first matrix with the $n$-th column of the second matrix. Below is a visual representation:
+
+\[
+    \begin{bmatrix}
+        a & b \\
+        c & d
+    \end{bmatrix}
+    \begin{bmatrix}
+        e & f \\
+        g & h
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        a \cdot e + b \cdot g & a \cdot f + b \cdot h \\
+        c \cdot e + d \cdot g & c \cdot f + d \cdot h
+    \end{bmatrix}
+\]
+
+Notice how in each $(i, j)$ entry of the product matrix, we compute the \emph{dot product} of the vector that forms the $i$-th row of the first matrix and the $j$-th column of the second matrix. The \emph{dot product} is simply an operation on the entries of two vectors involving the typical $+$ and $\times$ operations.
+
+Let's take a quick detour from matrix multiplication to talk about the well-known Floyd-Warshall algorithm for computing \texttt{APSP}. The key realization to understanding this algorithm is that between some start node $s$ and some terminal node $t$, the shortest path from $s \to t$ is the shorter path we can get from directly travelling from $s \to t$ vs. the path we get by travelling from $s$ to some intermediate node $k$ and then from $k$ to $t$. For a visualization, consider the trivial example below:
+
+\begin{center}
+    \includegraphics[scale=0.5]{media/Figure_1.png}
+\end{center}
+
+In the above graphic, the direct path from $s \to t$ has a cost of 11, while the path from $s \to k$ has a cost of 5 and the path from $k \to t$ has a cost of 5 as well. We can see that if we take $\min \{\mathrm{dist}_{s,t} = 11, \mathrm{dist}_{s,k} + \mathrm{dist}_{k,t} = 10 \}$, we get that by considering the intermediate node $k$, we arrive at a cheaper path from $s$ to $t$.
+
+How does the above logic tie into matrix multiplication? Well, it might be intutive to think of graphs in terms of adjacency matricies and the core Floyd-Warshall computation as a dot product between some vector $u$ that represents the shortest known paths from the starting node $s$ to all possible intermediate nodes $k$, and another vector $v$ that represents the shortest paths from all possible intermediate nodes $k$ to the terminal node $t$.
+
+For those already familiar with computing the shortest path between some start node $s$ and some terminal node $t$ on a directed and optionally weighted graph, it might be intuitive to also represent the calculation in terms of a dot product. Suppose some vector $v$ corresponds to the to the best known path costs from $s$ to every other node $t$ in the graph, and the index of an element in $v$ corresponds to the node $t$ that that element represents. An example of $v$ may be the following
+
+\[
+    v =
+    \begin{bmatrix}
+        1 & 2 & 5 & 7 & 0 & 10
+    \end{bmatrix}
+\]
+
 \subsection{Abstract Algebra Overview and Ring Operations}
-\subsection{Naive APSP}
 \subsection{Polynomial Matrices}
 \subsection{Edge Updates}
 \subsection{Hitting Sets}
