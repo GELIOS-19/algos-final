@@ -377,6 +377,8 @@ INPUT .\media\Figure_1.png
 INPUT .\media\Figure_1.png
 INPUT .\media\Figure_1.png
 INPUT .\media\Figure_1.png
+INPUT C:\Users\ashes\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmti8.tfm
+INPUT C:\Users\ashes\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmti7.tfm
 INPUT report.aux
 INPUT .\report.out
 INPUT .\report.out

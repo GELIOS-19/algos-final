@@ -159,16 +159,53 @@ Let's take a quick detour from matrix multiplication to talk about the well-know
 
 In the above graphic, the direct path from $s \to t$ has a cost of 11, while the path from $s \to k$ has a cost of 5 and the path from $k \to t$ has a cost of 5 as well. We can see that if we take $\min \{\mathrm{dist}_{s,t} = 11, \mathrm{dist}_{s,k} + \mathrm{dist}_{k,t} = 10 \}$, we get that by considering the intermediate node $k$, we arrive at a cheaper path from $s$ to $t$.
 
-How does the above logic tie into matrix multiplication? Well, it might be intutive to think of graphs in terms of adjacency matricies and the core Floyd-Warshall computation as a dot product between some vector $u$ that represents the shortest known paths from the starting node $s$ to all possible intermediate nodes $k$, and another vector $v$ that represents the shortest paths from all possible intermediate nodes $k$ to the terminal node $t$.
+How does the above logic tie into matrix multiplication? Well, it might be intutive to think of graphs in terms of adjacency matricies and the core Floyd-Warshall computation as a dot product between some vector $u$ that represents the shortest known paths from the starting node $s$ to all possible intermediate nodes $k$, and another vector $v$ that represents the shortest paths from all possible intermediate nodes $k$ to the terminal node $t$. Let's see an example of this analogy on the simple graph presented earlier:
 
-For those already familiar with computing the shortest path between some start node $s$ and some terminal node $t$ on a directed and optionally weighted graph, it might be intuitive to also represent the calculation in terms of a dot product. Suppose some vector $v$ corresponds to the to the best known path costs from $s$ to every other node $t$ in the graph, and the index of an element in $v$ corresponds to the node $t$ that that element represents. An example of $v$ may be the following
+\begin{quote}
+    Consider the adjacency matrix $A$ for the graph presented earlier:
 
-\[
-    v =
-    \begin{bmatrix}
-        1 & 2 & 5 & 7 & 0 & 10
-    \end{bmatrix}
-\]
+    \[
+        A =
+        \bordermatrix{
+            & s & k & t \cr
+            s & 0 & 5 & 11 \cr
+            k & \infty & 0 & 5 \cr
+            t & \infty & \infty & 0 \cr
+        }
+    \]
+
+    Notice that in $A$, the $(i, j)$ entry represents the cost of the \emph{direct} path from node $i$ to node $j$. The rows and columns are labeled with their appropriate nodes on the borders.
+
+    For the sake of computation, let's take the row $s$ and the column $t$ of the matrix as our $u$ and $v$ vectors. That is, let
+
+    \[
+        u =
+        \begin{bmatrix}
+            0 & 5 & 11
+        \end{bmatrix}
+        \qquad
+        v =
+        \begin{bmatrix}
+            11 \\
+            5 \\
+            0
+        \end{bmatrix}
+    \]
+
+    Just for clarity, recall that $u$ represents the shortest known path between the starting node $s$ and every other node $k$ in the graph. For column $s$ of $u$, the shortest path cost is 0 since we are already at $s$. For column $k$ of $u$, the path cost is 5 since the edge $s \to k$ on the graph has a cost of 5. For column $t$ of $u$, the path cost is 11 since the edge $s \to t$ has a cost of 11. In general, we see that each \emph{column} in $u$ represents the cost of the edge $s \to \textit{column in u}$. Following a similar logic, notice that in the vector $v$, each \emph{row} represents the cost of the edge $\textit{row in v} \to t$. Both \textit{column in $u$} and \textit{row in $v$} represent all the nodes in the graph.
+
+    Let's replace the numbers in $A$ with symbols, and see what happens when we take the dot product of $u$ and $v$:
+
+    \[
+        A =
+        \bordermatrix{
+            & s & k & t \cr
+            s & \mathrm{dist}_{s \to s} & \mathrm{dist}_{s \to k} & \mathrm{dist}_{s \to t} \cr
+            k & \mathrm{dist}_{k \to s} & \mathrm{dist}_{k \to k} & \mathrm{dist}_{k \to t} \cr
+            t & \mathrm{dist}_{t \to s} & \mathrm{dist}_{t \to k} & \mathrm{dist}_{t \to t} \cr
+        }
+    \]
+\end{quote}
 
 \subsection{Abstract Algebra Overview and Ring Operations}
 \subsection{Polynomial Matrices}

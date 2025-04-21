@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1745267215.35158 "c:/Users/ashes/Documents/Repos/Gatech Group Projects/algos-final/report.tex" "report.pdf" "report" 1745267216.38716 0
+["pdflatex"] 1745269521.9284 "c:/Users/ashes/Documents/Repos/Gatech Group Projects/algos-final/report.tex" "report.pdf" "report" 1745269522.952 0
   "C:/Users/ashes/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1745262736 83517 65a3177b3ac79b8083fbbdc4bb28a148 ""
   "C:/Users/ashes/AppData/Local/MiKTeX/fonts/tfm/public/rsfs/rsfs10.tfm" 1736870141 688 37338d6ab346c2f1466b29e195316aa4 ""
   "C:/Users/ashes/AppData/Local/MiKTeX/fonts/tfm/public/rsfs/rsfs5.tfm" 1736870141 684 3a51bd4fd9600428d5264cf25f04bb9a ""
@@ -28,6 +28,8 @@
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmsy6.tfm" 1136765053 1116 933a60c408fc0a863a92debe84b2d294 ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmsy8.tfm" 1136765053 1120 8b7d695260f3cff42e636090a8002094 ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmti12.tfm" 1136765053 1484 ed72f8f5cf654cda15ecc8e32bfcbee5 ""
+  "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmti7.tfm" 1136765053 1492 86331993fe614793f5e7e755835c31c5 ""
+  "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmti8.tfm" 1136765053 1504 1747189e0441d1c18f3ea56fafc1c480 ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/tfm/public/cm/cmtt12.tfm" 1136765053 772 9a936b7f5e2ff0557fce0f62822f0bbf ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb" 1247596666 32080 340ef9bf63678554ee606688e7b5339d ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmcsc10.pfb" 1247596667 32001 6aeea3afe875097b1eb0da29acd61e28 ""
@@ -217,11 +219,11 @@
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1700127522 55487 80a65caedd3722f4c20a14a69e785d8f ""
   "C:/Users/ashes/AppData/Local/Programs/MiKTeX/tex/latex/xstring/xstring.sty" 1693735632 123 a302f2c651a95033260db60e51527ae8 ""
-  "c:/Users/ashes/Documents/Repos/Gatech Group Projects/algos-final/report.tex" 1745267214 11258 ace8b3a79aed82379648cc8bd855df7b ""
+  "c:/Users/ashes/Documents/Repos/Gatech Group Projects/algos-final/report.tex" 1745269521 12863 74f18e2cd09961564bfbf1399591d84a ""
   "media/Figure_1.png" 1745266494 17065 d0396c76a334bbb296332b62b1865861 ""
-  "report.aux" 1745267216 2149 4f6072501a303a8bf45620e19188582a "pdflatex"
-  "report.out" 1745267216 2635 b7206bad0a1fb54d4ed14960c9c506cb "pdflatex"
-  "report.tex" 1745267214 11258 ace8b3a79aed82379648cc8bd855df7b ""
+  "report.aux" 1745269522 2149 666d9d36f1ca7c24a00f0d0ce068c724 "pdflatex"
+  "report.out" 1745269522 2635 b7206bad0a1fb54d4ed14960c9c506cb "pdflatex"
+  "report.tex" 1745269521 12863 74f18e2cd09961564bfbf1399591d84a ""
   (generated)
   "report.aux"
   "report.log"

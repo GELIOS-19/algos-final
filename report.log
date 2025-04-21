@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.1.14)  21 APR 2025 16:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.1.14)  21 APR 2025 17:05
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -874,13 +874,18 @@ Package pdftex.def Info: media/Figure_1.png  used on input line 157.
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.192     \item \href
-                     {https://www.dropbox.com/scl/fi/5w4k0lg0u8e36zugapp6c/S... [3 <./media/Figure_1.png>]
+l.193     \]
+             [3 <./media/Figure_1.png>]
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.195 \end{document}
-                     [4] (report.aux)
+l.229     \item \href
+                     {https://www.dropbox.com/scl/fi/5w4k0lg0u8e36zugapp6c/S... [4]
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.232 \end{document}
+                     [5] (report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
@@ -889,17 +894,17 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: B7206BAD0A1FB54D4ED14960C9C506CB;2635.
  ) 
 Here is how much of TeX's memory you used:
- 30473 strings out of 474485
- 622212 string characters out of 5743734
+ 30479 strings out of 474485
+ 622304 string characters out of 5743734
  1938542 words of memory out of 5000000
- 52205 multiletter control sequences out of 15000+600000
- 566933 words of font info for 70 fonts, out of 8000000 for 9000
+ 52209 multiletter control sequences out of 15000+600000
+ 567634 words of font info for 72 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,7n,96p,909b,566s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmitt10.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/ashes/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on report.pdf (4 pages, 182766 bytes).
+Output written on report.pdf (5 pages, 186954 bytes).
 PDF statistics:
- 204 PDF objects out of 1000 (max. 8388607)
+ 207 PDF objects out of 1000 (max. 8388607)
  26 named destinations out of 1000 (max. 500000)
  290 words of extra memory for PDF output out of 10000 (max. 10000000)
 
