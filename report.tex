@@ -103,7 +103,7 @@ In this report, we present the problem statement, and the technical background r
 
 \section{Problem Statement}
 
-Given a graph $G(V, E)$, we want to develop a data structre that can maintain \texttt{APSP} dynamically with an initial overhead $\displaystyle \tilde \bigO(n^{3.5})$ time and supports queries and updates in $\displaystyle \tilde \bigO(n^{2.5})$ time. Since this algorithm is optimized for maintaining \texttt{APSP} for changing graphs (hence requires a dynamic algorithm), having a time complexity of $\displaystyle \tilde \bigO(n^{2.5})$ is more efficient compared to the naive approach which takes $\bigO(n^3)$ time for queries and updates.
+Given a graph $G(V, E)$, we want to develop a data structure that can maintain \texttt{APSP} dynamically with an initial overhead $\displaystyle \tilde \bigO(n^{3.5})$ time and supports queries and updates in $\displaystyle \tilde \bigO(n^{2.5})$ time. Since this algorithm is optimized for maintaining \texttt{APSP} for changing graphs (hence requires a dynamic algorithm), having a time complexity of $\displaystyle \tilde \bigO(n^{2.5})$ is more efficient compared to the naive approach which takes $\bigO(n^3)$ time for queries and updates.
 
 \newpage
 
@@ -129,7 +129,7 @@ We will be covering general overviews of topics that help toward understanding t
 
 \section{Technical Background}
 
-\subsection{Matrix Multiplication Recap and Naive APSP}
+\subsection{Matrix Multiplication Recap and Naive APSP} \label{sec:3.1}
 
 Matrix multiplication is an important concept that we will be making extensive use of to understand the technical components in this report. You are already familiar with the basic method of multiplying two matrices with the same inner dimension, where you multiply the $n$-th row of the first matrix with the $n$-th column of the second matrix. Below is a visual representation:
 
@@ -151,7 +151,7 @@ Matrix multiplication is an important concept that we will be making extensive u
 
 Notice how in each $(i, j)$ entry of the product matrix, we compute the \emph{dot product} of the vector that forms the $i$-th row of the first matrix and the $j$-th column of the second matrix. The \emph{dot product} is simply an operation on the entries of two vectors involving the typical $+$ and $\times$ operations.
 
-Let's take a quick detour from matrix multiplication to talk about the well-known Floyd-Warshall algorithm for computing \texttt{APSP}. The key realization to understanding this algorithm is that between some start node $s$ and some terminal node $t$, the shortest path from $s \to t$ is the shorter path we can get from directly travelling from $s \to t$ vs. the path we get by travelling from $s$ to some intermediate node $k$ and then from $k$ to $t$. For a visualization, consider the trivial example below:
+Let's take a quick detour from matrix multiplication to talk about the well-known Floyd-Warshall algorithm for computing \texttt{APSP}. The key realization to understanding this algorithm is that between some start node $s$ and some terminal node $t$, the shortest path from $s \to t$ is the shorter path we can get from directly traveling from $s \to t$ vs. the path we get by traveling from $s$ to some intermediate node $k$ and then from $k$ to $t$. For a visualization, consider the trivial example below:
 
 \begin{center}
     \includegraphics[scale=0.5]{media/Figure_1.png}
@@ -159,7 +159,7 @@ Let's take a quick detour from matrix multiplication to talk about the well-know
 
 In the above graphic, the direct path from $s \to t$ has a cost of 11, while the path from $s \to k$ has a cost of 5 and the path from $k \to t$ has a cost of 5 as well. We can see that if we take $\min \{\mathrm{dist}_{s,t} = 11, \mathrm{dist}_{s,k} + \mathrm{dist}_{k,t} = 10 \}$, we get that by considering the intermediate node $k$, we arrive at a cheaper path from $s$ to $t$.
 
-How does the above logic tie into matrix multiplication? Well, it might be intutive to think of graphs in terms of adjacency matricies and the core Floyd-Warshall computation as a dot product between some vector $u$ that represents the shortest known paths from the starting node $s$ to all possible intermediate nodes $k$, and another vector $v$ that represents the shortest paths from all possible intermediate nodes $k$ to the terminal node $t$. Let's see an example of this analogy on the simple graph presented earlier:
+How does the above logic tie into matrix multiplication? Well, it might be intuitive to think of graphs in terms of adjacency matrices and the core Floyd-Warshall computation as a dot product between some vector $u$ that represents the shortest known paths from the starting node $s$ to all possible intermediate nodes $k$, and another vector $v$ that represents the shortest paths from all possible intermediate nodes $k$ to the terminal node $t$. Let's see an example of this analogy on the simple graph presented earlier:
 
 \begin{quote}
     Consider the adjacency matrix $A$ for the graph presented earlier:
@@ -229,12 +229,72 @@ How does the above logic tie into matrix multiplication? Well, it might be intut
         &+ \; \mathrm{dist}_{s \to t} \times \mathrm{dist}_{t \to t}
     \end{eqnarray}
 
-    Based on the dot product formula, it seems that in the $(s, t)$ entry of the matrix $A^2$, we are able to calculate some information involving all paths from node $s$ to node $t$ involving one intermediate step through all the other nodes in the graph. Particularly, the product on line $(1)$ gives us information regarding the path $s \to s \to t$, the product on line $(2)$ gives us information regarding the path $s \to k \to t$, and the product on line $(3)$ gives us information regarding the path $s \to t \to t$. You may notice the paths $s \to s \to t$ and $s \to t \to t$ are simply the same as the path $s \to t$, a direct path from $s$ to $t$ with no intermediate nodes. It may become apparant to you that by induction, the matrix $(A^2)^2_{(s, t)}$ stores the shortest path between $s \to t$, $s \to k \to t$ for all graph vertices $k$, and $s \to l \to m \to t$ for all combinations of nodes $l$ and $m$ in the graph. We can say that the adjacency matrix $(A^2)^n_{(s, t)}$ stores the shortest path from $s$ to $t$ using \emph{up to} $n$ intermediate vertices.
+    Based on the dot product formula, it seems that in the $(s, t)$ entry of the matrix $A^2$, we are able to calculate some information involving all paths from node $s$ to node $t$ involving one intermediate step through all the other nodes in the graph. Particularly, the product on line $(1)$ gives us information regarding the path $s \to s \to t$, the product on line $(2)$ gives us information regarding the path $s \to k \to t$, and the product on line $(3)$ gives us information regarding the path $s \to t \to t$. You may notice the paths $s \to s \to t$ and $s \to t \to t$ are simply the same as the path $s \to t$, a direct path from $s$ to $t$ with no intermediate nodes. It may become apparent to you that by induction, the matrix $(A^2)^2_{(s, t)}$ stores the shortest path between $s \to t$, $s \to k \to t$ for all graph vertices $k$, and $s \to l \to m \to t$ for all combinations of nodes $l$ and $m$ in the graph. We can say that the adjacency matrix $(A^2)^n_{(s, t)}$ stores the shortest path from $s$ to $t$ using \emph{up to} $n$ intermediate vertices.
 \end{quote}
 
-As shown in the above analogy, we are essentially able to store the result of a dot product operation between the path lengths of $s \to t$ and $s \to k \to t$ for every intermediate node $k$ in the graph. As we explained earlier during our discussion of Floyd-Warshall's algorithm, we specifically need to compute the minimum cost path between all the aforementioned products from the dot product calculation. In the next section, we will show how we can override the standard $+$ and $\times$ operations such that simply computing the squares of adjacency matrices allows us to solve \texttt{APSP}, and we will also explain how other properties of enviornments with overriden $+$ and $\times$ operations may help us solve \texttt{APSP} more efficiently.
+As shown in the above analogy, we are essentially able to store the result of a dot product operation between the path lengths of $s \to t$ and $s \to k \to t$ for every intermediate node $k$ in the graph. As we explained earlier during our discussion of Floyd-Warshall's algorithm, we specifically need to compute the minimum cost path between all the aforementioned products from the dot product calculation. In the next section, we will show how we can override the standard $+$ and $\times$ operations such that simply computing the squares of adjacency matrices allows us to solve \texttt{APSP}, and we will also explain how other properties of environments with overridden $+$ and $\times$ operations may help us solve \texttt{APSP} more efficiently.
 
 \subsection{Abstract Algebra Overview and Ring Operations}
+
+In this section, we cover the basics of the field of abstract algebra as relevant in solving the \texttt{APSP} problem. As we showed in section~\ref{sec:3.1}, on an adjacency matrix of power $A^{2 \times n}$, the $(s, t)$ entry encodes information regarding the dot product between $s$-$t$ paths involving up to $n$ intermediate nodes. When we explained our theory regarding Floyd-Warshall's algorithm, we mentioned that we somehow need to store the minimum cost path between all of the path costs ($s \to t, s \to k_0 \to t, \ldots, s \to k_0 \to k_1 \to \cdots \to k_{n - 1} \to t$) that make up the individual products in the dot product. We may now ask ourselves, when computing a dot product in the form:
+\[
+    \begin{split}
+        A^2_{(s,t)}
+        &= \mathrm{dist}_{s \to s} \times \mathrm{dist}_{s \to t} \\
+        &+ \; \mathrm{dist}_{s \to k} \times \mathrm{dist}_{k \to t} \\
+        &+ \; \mathrm{dist}_{s \to t} \times \mathrm{dist}_{t \to t}
+    \end{split}
+\]
+Is it possible to override the $+$ and $\times$ operations in order to suit our desired $\min$ and $+$ operations?
+
+It turns out this is entirely possible as long as our overridden $+$ and $\times$ operations adhere to the rules of \emph{algebraic rings}. A ring is an algebraic structure—that is, a set of elements together with two operations $\oplus$ and $\otimes$—that satisfies certain axioms:
+
+\begin{quote}
+    $S$ is an algebraic \emph{semiring} defined as $(S, \oplus, \otimes)$. The below conditions must be met:
+
+    \begin{enumerate}
+        \item $(S, \oplus)$ is an Abelian group. In other words, it satisfies the commutative property that $\forall a, b \in S : a \oplus b = b \oplus a$ and it satisfies the identity that $\forall a \in S : a \oplus 0_S = a$, where $0_S$ refers to the zero element in $S$.
+        \item $(S, \otimes)$ is a monoid. In other words, it satisfies the identity $\forall a \in S : a \otimes I = a$, where $I$ refers to the identity element, which can typically be thought of as 1.
+        \item The $\otimes$ operation must distribute over the $\oplus$ operation. In other words, $\forall a, b, c \in S : a \otimes (b \oplus c) = a \otimes b \oplus a \otimes c$.
+        \item $0_S$ is an annihilator in $\otimes$. In other words, $\forall a \in S : a \otimes 0_S = 0_S \otimes a = 0_S$.
+    \end{enumerate}
+
+    {\footnotesize Note, the difference between a \emph{ring} and a \emph{semiring} is that a semiring does not need to support the additive inverse. Meaning, there does not necessarily have to be a ``negative'' corresponding to each element}
+\end{quote}
+
+So how does this tie into our \texttt{APSP} problem?
+
+We can define our dot product over the semiring $(S, \oplus, \otimes)$ where:
+\[
+    \begin{split}
+        & a, b \in \mathds{R} \\
+        & a \oplus b = \min\{a, b\} \\
+        & a \otimes b = a + b \qquad \text{{\footnotesize Where + is the typical addition}}
+    \end{split}
+\]
+It is straightforward why we can do this, since $(S, \min, +)$ satisfies all of the axioms. You can convince yourself of this fact. It is important to note that $S$ does not have an additive inverse since there is no possible $a, b \in S : \min\{a, b\} = \infty$ unless $a = \infty$ and $b = \infty$.
+
+Now, notice how the dot product defined at the end of section~\ref{sec:3.1} changes. Under our ring $S$, we get:
+\[
+    \begin{split}
+        A^2_{(s,t)}
+        &= \mathrm{dist}_{s \to s} \otimes \mathrm{dist}_{s \to t} \\
+        &\oplus \; \mathrm{dist}_{s \to k} \otimes \mathrm{dist}_{k \to t} \\
+        &\oplus \; \mathrm{dist}_{s \to t} \otimes \mathrm{dist}_{t \to t}
+    \end{split}
+    \qquad = \qquad
+    \min\!\left\{
+        \begin{aligned}
+            &\mathrm{dist}_{s\to s} + \mathrm{dist}_{s\to t},\\
+            &\mathrm{dist}_{s\to k} + \mathrm{dist}_{k\to t},\\
+            &\mathrm{dist}_{s\to t} + \mathrm{dist}_{t\to t}
+        \end{aligned}
+    \right\}
+\]
+This exactly what we wanted to compute when we discussed Floyd Warshall's algorithm! As you can see, using algebraic rings, we have come up with a system where simple repeated squaring of the adjacency matrix $A$ over the ring $R$ effectively solves \texttt{APSP}. We notice that after squaring the adjacency matrix $n - 1$ times, the result contains the answer to \texttt{APSP}. Since matrix multiplication takes on the order of $\bigO(v^3)$ time, where $v$ is the number of vertices in the graph, and since we must effectively square the adjacency matrix $v$ times, we can see how a min-plus squaring algorithm attains a time complexity of $\bigO(v^4)$ (using naive matrix multiplication).
+
+Our repeated squaring approach can take as little as $\bigO(n^3 \log(n))$ time if we are more efficient in how we implement \emph{binary exponentiation} rather than using naive matrix multiplication for exponentiation. However, the repeated squaring method is still more inefficient than Floyd-Warshall's algorithm, which takes only $\bigO(n^3)$ time. It turns out that both the min-plus repeated squaring approach and Floyd-Warshall's algorithm are performing the same operations to compute \texttt{APSP}, however Floyd-Warshall's algorithm attains more efficiency using \emph{dynamic programming} and ``simulating'' the min-plus matrix multiplications in place. This min-plus repeated squaring approach also lies at the heart of the algorithm mentioned in Jan van den Brand's paper, but before we can conceptualize it, we are going to use our knowledge or algebraic rings to talk about polynomial matrices.
+
 \subsection{Polynomial Matrices}
 \subsection{Edge Updates}
 \subsection{Hitting Sets}
