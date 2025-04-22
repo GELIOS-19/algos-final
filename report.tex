@@ -229,14 +229,16 @@ How does the above logic tie into matrix multiplication? Well, it might be intui
         &+ \; \mathrm{dist}_{s \to t} \times \mathrm{dist}_{t \to t}
     \end{eqnarray}
 
-    Based on the dot product formula, it seems that in the $(s, t)$ entry of the matrix $A^2$, we are able to calculate some information involving all paths from node $s$ to node $t$ involving one intermediate step through all the other nodes in the graph. Particularly, the product on line $(1)$ gives us information regarding the path $s \to s \to t$, the product on line $(2)$ gives us information regarding the path $s \to k \to t$, and the product on line $(3)$ gives us information regarding the path $s \to t \to t$. You may notice the paths $s \to s \to t$ and $s \to t \to t$ are simply the same as the path $s \to t$, a direct path from $s$ to $t$ with no intermediate nodes. It may become apparent to you that by induction, the matrix $(A^2)^2_{(s, t)}$ stores the shortest path between $s \to t$, $s \to k \to t$ for all graph vertices $k$, and $s \to l \to m \to t$ for all combinations of nodes $l$ and $m$ in the graph. We can say that the adjacency matrix $(A^2)^n_{(s, t)}$ stores the shortest path from $s$ to $t$ using \emph{up to} $n$ intermediate vertices.
+    Based on the dot product formula, it seems that in the $(s, t)$ entry of the matrix $A^2$, we are able to calculate some information involving all paths from node $s$ to node $t$ involving one intermediate step through all the other nodes in the graph. Particularly, the product on line $(1)$ gives us information regarding the path $s \to s \to t$, the product on line $(2)$ gives us information regarding the path $s \to k \to t$, and the product on line $(3)$ gives us information regarding the path $s \to t \to t$. You may notice the paths $s \to s \to t$ and $s \to t \to t$ are simply the same as the path $s \to t$, a direct path from $s$ to $t$ with no intermediate nodes. It may become apparent to you that by induction, the matrix $A^3_{(s, t)}$ stores the shortest path between $s \to t$, $s \to k \to t$ for all graph vertices $k$, and $s \to k_0 \to k_1 \to t$ for all combinations of nodes $k_0$ and $k_1$ in the graph. We can say that the adjacency matrix $A^n_{(s, t)}$ stores the shortest path from $s$ to $t$ using \emph{up to} $n$ intermediate vertices.
+
+    {\footnotesize Why is the induction apparent? If we multiply adjacency matrix $A^n$ by adjacency matrix $A^m$, we notice that we will be considering paths of the form $s \to k_0 \to \cdots \to k_{n - 1} \to k_{n} \to k_{n + 1} \to \cdots k_{n + m - 1} \to t$. The total length of this path is $n + m$, which is also the power of the product as $A^n \times A^m = A^{n + m}$, and the number of intermediate nodes is $n + m - 1$.}
 \end{quote}
 
 As shown in the above analogy, we are essentially able to store the result of a dot product operation between the path lengths of $s \to t$ and $s \to k \to t$ for every intermediate node $k$ in the graph. As we explained earlier during our discussion of Floyd-Warshall's algorithm, we specifically need to compute the minimum cost path between all the aforementioned products from the dot product calculation. In the next section, we will show how we can override the standard $+$ and $\times$ operations such that simply computing the squares of adjacency matrices allows us to solve \texttt{APSP}, and we will also explain how other properties of environments with overridden $+$ and $\times$ operations may help us solve \texttt{APSP} more efficiently.
 
-\subsection{Abstract Algebra Overview and Ring Operations}
+\subsection{Abstract Algebra Overview and Ring Operations} \label{sec:3.2}
 
-In this section, we cover the basics of the field of abstract algebra as relevant in solving the \texttt{APSP} problem. As we showed in section~\ref{sec:3.1}, on an adjacency matrix of power $A^{2 \times n}$, the $(s, t)$ entry encodes information regarding the dot product between $s$-$t$ paths involving up to $n$ intermediate nodes. When we explained our theory regarding Floyd-Warshall's algorithm, we mentioned that we somehow need to store the minimum cost path between all of the path costs ($s \to t, s \to k_0 \to t, \ldots, s \to k_0 \to k_1 \to \cdots \to k_{n - 1} \to t$) that make up the individual products in the dot product. We may now ask ourselves, when computing a dot product in the form:
+In this section, we cover the basics of the field of abstract algebra as relevant in solving the \texttt{APSP} problem. As we showed in section~\ref{sec:3.1}, on an adjacency matrix of power $A^n$, the $(s, t)$ entry encodes information regarding the dot product between $s$-$t$ paths involving up to $n$ intermediate nodes. When we explained our theory regarding Floyd-Warshall's algorithm, we mentioned that we somehow need to store the minimum cost path between all of the path costs ($s \to t, s \to k_0 \to t, \ldots, s \to k_0 \to k_1 \to \cdots \to k_{n - 1} \to t$) that make up the individual products in the dot product. We may now ask ourselves, when computing a dot product in the form:
 \[
     \begin{split}
         A^2_{(s,t)}
@@ -247,7 +249,7 @@ In this section, we cover the basics of the field of abstract algebra as relevan
 \]
 Is it possible to override the $+$ and $\times$ operations in order to suit our desired $\min$ and $+$ operations?
 
-It turns out this is entirely possible as long as our overridden $+$ and $\times$ operations adhere to the rules of \emph{algebraic rings}. A ring is an algebraic structure—that is, a set of elements together with two operations $\oplus$ and $\otimes$—that satisfies certain axioms:
+It turns out this is entirely possible as long as our overridden $+$ and $\times$ operations adhere to the rules of \emph{algebraic rings}. A ring is an algebraic structure—that is, a set of elements together with two binary operations $\oplus$ and $\otimes$—that satisfies certain axioms:
 
 \begin{quote}
     $S$ is an algebraic \emph{semiring} defined as $(S, \oplus, \otimes)$. The below conditions must be met:
@@ -259,7 +261,7 @@ It turns out this is entirely possible as long as our overridden $+$ and $\times
         \item $0_S$ is an annihilator in $\otimes$. In other words, $\forall a \in S : a \otimes 0_S = 0_S \otimes a = 0_S$.
     \end{enumerate}
 
-    {\footnotesize Note, the difference between a \emph{ring} and a \emph{semiring} is that a semiring does not need to support the additive inverse. Meaning, there does not necessarily have to be a ``negative'' corresponding to each element}
+    {\footnotesize Note, the difference between a \emph{ring} and a \emph{semiring} is that a semiring does not need to support the additive inverse. Meaning, there does not necessarily have to be a ``negative'' corresponding to each element. Additionally, note that $\otimes$ does not have to be commutative.}
 \end{quote}
 
 So how does this tie into our \texttt{APSP} problem?
@@ -295,10 +297,94 @@ This exactly what we wanted to compute when we discussed Floyd Warshall's algori
 
 Our repeated squaring approach can take as little as $\bigO(n^3 \log(n))$ time if we are more efficient in how we implement \emph{binary exponentiation} rather than using naive matrix multiplication for exponentiation. However, the repeated squaring method is still more inefficient than Floyd-Warshall's algorithm, which takes only $\bigO(n^3)$ time. It turns out that both the min-plus repeated squaring approach and Floyd-Warshall's algorithm are performing the same operations to compute \texttt{APSP}, however Floyd-Warshall's algorithm attains more efficiency using \emph{dynamic programming} and ``simulating'' the min-plus matrix multiplications in place. This min-plus repeated squaring approach also lies at the heart of the algorithm mentioned in Jan van den Brand's paper, but before we can conceptualize it, we are going to use our knowledge or algebraic rings to talk about polynomial matrices.
 
-\subsection{Polynomial Matrices}
+\subsection{Polynomial Matrices} \label{sec:3.3}
+
+Now, let's really start building the foundation to Jan van den Brand's \texttt{APSP} algorithm by taking about adjacency matrices with polynomial entries!
+
+First let's build some intuition for why we might want to build polynomial adjacency matrices. Going forward, we are specifically going to talk about \emph{unweighted} adjacency matrices where $A_{(s, t)} = 1$ if there is a directed edge $s \to t$ and $0$ otherwise. When we refer to simple unweighted adjacency matrices, it turns out we can use simple powers of $A$ (ie. $A, A^2, A^3, \ldots, A^n$) and the traditional operations $+$ and $\times$ to achieve a similar effect to our min-plus repeated squaring algorithm that we explained in section~\ref{sec:3.2}. However, instead of tracking in the $A^n_{(s, t)}$ the shortest path between start node $s$ and terminal node $t$ using up to $n$ intermediate nodes, in the $A^n_{(s, t)}$ position, we are instead tracking the number of paths that \emph{exist} between $s$ and $t$ on \emph{exactly} $n$ nodes. Why exactly is this? Let's consider a simple example with the graph below:
+
+\begin{center}
+    \includegraphics[scale=0.5]{media/Figure_2.png}
+\end{center}
+
+\begin{quote}
+    We can build the unweighted adjacency matrix for the above graph:
+
+    \[
+        A =
+        \bordermatrix{
+            & A & B & C \cr
+            A & 0 & 1 & 0 \cr
+            B & 0 & 0 & 0 \cr
+            C & 1 & 1 & 0 \cr
+        }
+    \]
+
+    Notice again how this first degree adjacency matrix only tells us if a \emph{direct} edge exists between any start node and terminal node. Now, pay attention to the following calculations we will perform on two different paths for the sake of example: $C \to B$ and $B \to C$.
+
+    First, let's take $C \to B$. From the graph picture, we can see that there are two paths from $C \to B$. There is one direct path from $C$ to $B$, which is why $A_{(C, B)} = 1$. Additionally, there is another path through intermediate node $A$, which corresponds to the path $C \to A \to B$. Let's see what happens when we calculate $A^2_{(C, B)}$, involving the dot product between the vector formed by row $C$ and the vector formed by column $B$.
+
+    \[
+        u =
+        \begin{bmatrix}
+            1 & 1 & 0
+        \end{bmatrix}
+        \quad
+        v =
+        \begin{bmatrix}
+            1 \\
+            0 \\
+            1
+        \end{bmatrix}
+    \]
+
+    Like we mentioned earlier in section~\ref{sec:3.1}, in this format, $u$ represents the existence of a direct path that begins at node $C$ and ends at every other node in the graph, while $v$ represents the existence of a direct path that begins at every other node in the graph and ends at node $B$. We can think of each product in this dot product as if asking the question ``Is there a \emph{direct} path from $C$ to some node $k$ and then is there a \emph{direct} path from that node $k$ to $B$?'' If the answer is yes to both parts of that question, this individual product amounts to 1. Below is the dot product calculation.
+
+    \[
+        u \cdot v = (1 \cdot 1) + (1 \cdot 0) + (0 \cdot 1) = 1
+    \]
+
+    You can see how the dot product considers every possible choice of intermediate node, and the result of the dot product should be the number of paths from $C$ to $B$ using exactly one intermediate node. Below is the completed product matrix $A^2$.
+
+    \[
+        A^2 =
+        \bordermatrix{
+            & A^2 & B^2 & C^2 \cr
+            A^2 & 0 & 0 & 0 \cr
+            B^2 & 0 & 0 & 0 \cr
+            C^2 & 0 & 1 & 0 \cr
+        }
+    \]
+
+    As you can see, if a path starting from $s$ and ending at $t$ exists with exactly one intermediate node, then that position will have a 1 in the matrix. By the same inductive reasoning we used in section~\ref{sec:3.1}, for an adjacency matrix of power $A^n$, the $A^n_{(s, t)}$ entry will track the number of paths from $s$ to $t$ on exactly $n - 1$ intermediate nodes.
+
+    % Now, let's take $B \to C$. There exists no \emph{direct} path in our directed graph from $B \to C$, so we notice that the entry $A_{(B, C)} = 0$. When we square $A$, the entry $A^2_{B, C}$ should contain a 1 if there is a possible path $B \to k \to C$ that takes one intermediate vertex. However, notice that there are no possible paths starting at $B$ and ending at $C$, so we expect $A^2_{(B, C)} = 0$. To calculate this entry, we take the dot product of the vector formed by row $B$ and the vector formed by column $C$.
+
+    % \[
+    %     u =
+    %     \begin{bmatrix}
+    %         0 & 0 & 0
+    %     \end{bmatrix}
+    %     \quad
+    %     v =
+    %     \begin{bmatrix}
+    %         0 \\
+    %         0 \\
+    %         0
+    %     \end{bmatrix}
+    % \]
+
+    % Here, $u$ represents the existence of paths starting at $B$ and ending at any other node in the graph, and $v$ represents the existence of paths starting from any other node in the graph and ending at $C$. Since it is obvious from the graph picture that $B$ has an out-degree of 0 and $C$ has an in-degree of 0, vectors $u$ and $v$ are unremarkably 0 vectors. Therefore, their dot product is also 0 and we find that $A^2_{(B, C)} = 0$.
+
+    It might be self-explanatory why paths that cannot be formed, for example $B \to C$ will have $A^n_{(B, C)} = 0 \quad \forall n \in \mathds{Z}^+$.
+\end{quote}
+
+Let's try something new now
+
 \subsection{Edge Updates}
 \subsection{Hitting Sets}
 
+% Minimal effort conversion from the original document
 \section{Solution}
 \subsection{Algorithm}
 \subsection{Time Complexity Analysis}
