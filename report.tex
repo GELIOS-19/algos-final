@@ -626,6 +626,8 @@ Above, we saw how we can convert our original graph $G$ with $n$ nodes into a re
 
 We know that $\mathrm{dist}_G(s, t) = \min \{\mathrm{dist}_{h-bounded}(s, t), \mathrm{dist}_H(s, t)\}$, since either there is a smaller than $h$-length $s$-$t$ path already present in $A^{\prime \prime}$ or we need to use our reduced graph $H$ to compute the distance. To compute the $s$-$t$ path distance on $H$, we can simply use Dijkstra's algorithm to solve \texttt{APSP} for $H$. This has a time complexity of $\bigO(|V| \times |E^{\prime}) = \bigO(n \times \frac{n^2}{h}) = \bigO(\frac{n^3}{h})$.
 
+In section~\ref{sec:3.4}, we saw how we can achieve a time complexity of only $\bigO(h n^2)$ to update our $A^{\prime \prime}$ data structure. When we update our reduced graph $H$, we only need to update the edges from the new node $v$ to each $r \in R$ and from each $r \in R$ to $v$. This takes $\bigO(|R|) = \bigO(\frac{n}{h})$ time. Since we need to follow this up with an additional run of Dijkstra's algorithm, we can see the total update cost for $H$ is $\bigO(|V| \times |R|) = \bigO(n \times \frac{n}{h}) = \bigO(\frac{n^2}{h})$ time.
+
 \section{Solution} \label{sec:4}
 \subsection{Algorithm}
 \subsection{Time Complexity Analysis}
