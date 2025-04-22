@@ -310,7 +310,7 @@ Now, let's really start building the foundation to Jan van den Brand's \texttt{A
 
 \subsubsection{Unweighted Adjacency Matrices}
 
-First let's build some intuition for why we might want to build polynomial adjacency matrices. Going forward, we are specifically going to talk about \emph{unweighted} adjacency matrices where $A_{(s, t)} = 1$ if there is a directed edge $s \to t$ and $0$ otherwise. When we refer to simple unweighted adjacency matrices, it turns out we can use simple powers of $A$ (ie. $A, A^2, A^3, \ldots, A^n$) and the traditional operations $+$ and $\times$ to achieve a similar effect to our min-plus repeated squaring algorithm that we explained in section~\ref{sec:3.2}. However, instead of tracking in the $A^n_{(s, t)}$ the shortest path between start node $s$ and terminal node $t$ using up to $n$ intermediate nodes, in the $A^n_{(s, t)}$ position, we are instead tracking the number of paths that \emph{exist} between $s$ and $t$ on \emph{exactly} $n$ nodes. Why exactly is this? Let's consider a simple example with the graph below:
+First let's build some intuition for why we might want to build polynomial adjacency matrices. Going forward, we are specifically going to talk about \emph{unweighted} adjacency matrices where $A_{(s, t)} = 1$ if there is a directed edge $s \to t$ and $0$ otherwise. When we refer to simple unweighted adjacency matrices, it turns out we can use simple powers of $A$ (ie. $A, A^2, A^3, \ldots, A^n$) and the traditional operations $+$ and $\times$ to achieve a similar effect to our min-plus repeated squaring algorithm that we explained in section~\ref{sec:3.2}. However, instead of tracking in the $A^n_{(s, t)}$ the shortest path between start node $s$ and terminal node $t$ using up to $n$ intermediate nodes, in the $A^n_{(s, t)}$ position, we are instead tracking the \emph{number} of paths that \emph{exist} between $s$ and $t$ on \emph{exactly} $n$ nodes. Why exactly is this? Let's consider a simple example with the graph below:
 
 \begin{center}
     \includegraphics[scale=0.5]{media/Figure_2.png}
@@ -396,28 +396,182 @@ Let's try something new now. What happens if we want to form the accumulated adj
     A^{\prime} = A^0 + A^1 + A^2 + A^3 + \cdots
 \]
 
-Does this look familiar to you? You might notice that this sum has a similar format to the infinite power series. Note that $A^0 = I$, and the identity matrix adds 1's along the diagonal, which simply adds circular edges from each node to itself. This does not impact any calculations.
+Does this look familiar to you? You might notice that this sum has a similar format to the infinite geometric series. Note that $A^0 = I$, and the identity matrix adds 1's along the diagonal, which simply adds circular edges from each node to itself. This does not impact any calculations.
 
-We know that a formal power series of the form $1 + x + x^2 + \cdots$ can be represented by the generating function
+We know that a formal geometric series of the form $1 + x + x^2 + \cdots$ can be represented by the generating function
 
 \[
     \frac{1}{1 - x} = 1 + x + x^2 + \cdots
 \]
 
-Interestingly, under the conditions of adjacency matrices representing directed acyclic graphs, or over a field with random weights, we can use a ``generating function'' to efficiently compute $A^{\prime}$ as well! In particular, we can use the below identity:
+Interestingly, under the conditions of adjacency matrices representing directed acyclic graphs (\texttt{DAG}s), or over a field with random weights, we can use a ``generating function'' to efficiently compute $A^{\prime}$ as well! In particular, we can use the below identity:
 
 \[
     (I - A)^{-1} = A^0 + A^1 + A^2 + A^3 + \cdots
 \]
 
-Now, by computing the matrix $A^{\prime} = (I - A)^{-1}$, we have a new matrix we can use to check the existence of an $s$-$t$ path. The $A^{\prime}_{(s, t)}$ entry will be non-zero if a path exists from $s$ to $t$ on any number of intermediate nodes, or $0$ if otherwise. To understand this identity rigorously, we can recall our abstract algebra concepts from section~\ref{sec:3.2}. Notably, our identity only works for \texttt{DAG}s and field matrices since we need a defined multiplicative inverse to be defined. In a field, every nonzero scalar has an inverse, and determinants live there, so you can talk about $\det(I - A)\neq 0$ and hence $(I - A)^{-1}$ exists.  In an arbitrary ring (say \(\mathbb Z\) or a semiring), you can't guarantee that. Additionally, we need the series $A^0 + A^1 + A^2 + A^3 + \cdots$ to eventually stop since an infinite sum of matrices does not have much meaning unless the tail vanishes. On a \texttt{DAG}, we know the adjacency matrix $A^n = 0$ since there are no paths of length $n$, as the longest path is of length $n - 1$. However, we will be covering how we can adapt some of these restrictions to general commutative rings so that our algorithm can cover a broader range of matrices.
+Now, by computing the matrix $A^{\prime} = (I - A)^{-1}$, we have a new matrix we can use to check the existence of an $s$-$t$ path. The $A^{\prime}_{(s, t)}$ entry will be non-zero if a path exists from $s$ to $t$ on any number of intermediate nodes, or $0$ if otherwise. To understand this identity rigorously, we can recall our abstract algebra concepts from section~\ref{sec:3.2}. Notably, our identity only works for \texttt{DAG}s and field matrices since we need a genuine multiplicative inverse to be defined. In a field, every nonzero scalar has an inverse, and determinants live there, so you can talk about $\det(I - A)\neq 0$ and hence $(I - A)^{-1}$ exists.  In an arbitrary ring (say \(\mathbb Z\) or a semiring), you can't guarantee that. Additionally, we need the series $A^0 + A^1 + A^2 + A^3 + \cdots$ to eventually stop since an infinite sum of matrices does not have much meaning unless the tail vanishes. On a \texttt{DAG}, we know the adjacency matrix $A^n = 0$ since there are no paths of length greater than or equal to $n$, as the longest path is of length $n - 1$. However, we will be covering how we can adapt some of these restrictions to general commutative rings so that our algorithm can cover a broader range of matrices.
 
-\subsubsection{Polynomial Matrices as the Next Intuitive Step}
+\subsubsection{Polynomial Matrices as the Next Intuitive Step} \label{sec:3.3.3}
+
+So where do polynomial matrices come into the picture? As discussed previously, our accumulated adjacency matrix $A^{\prime}$ can track the number of $s$-$t$ paths on any number of intermediate nodes. However, just the total number of $s$-$t$ paths does not help us solve \texttt{APSP} since we need some mechanism to determine the \emph{shortest} $s$-$t$ path. An intelligent mechanism to do just this would be to make use of \emph{indeterminates} where we can collect the number of $s$-$t$ paths taking $n$ intermediate nodes as the coefficient of the $x^n$ term of a polynomial.
+
+Let's formalize this theory. Instead of the geometric series we saw earlier, we can instead represent $A^{\prime}$ using a formal power series; we'll call this new matrix $A^{\prime \prime}$:
+
+\[
+    A^{\prime \prime} = A^0 x^0 + A^1 x^1 + \cdots + A^n x^n
+\]
+
+We can use a similar identity to the one we came up with for $A^{\prime}$ to represent $A^{\prime \prime}$.
+
+\[
+    A^{\prime \prime} = (I - xA)^{-1}
+\]
+
+We will show why this identity works in subsection~\ref{sec:3.3.4}, but for now, let's see a simple example taking it for granted.
+
+\begin{quote}
+    Consider the following graph:
+
+    \begin{center}
+        \includegraphics[scale=0.5]{media/Figure_3.png}
+    \end{center}
+
+    With the adjacency matrix below:
+
+    \[
+        A =
+        \bordermatrix{
+            & a & b & c \cr
+            a & 0 & 1 & 0 \cr
+            b & 1 & 0 & 1 \cr
+            c & 1 & 0 & 0 \cr
+        }
+    \]
+
+    We compute $A^{\prime \prime}$ as $(I - xA)^{-1}$:
+
+    \[
+        A^{\prime \prime} =
+        \left(
+            \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & 1 & 0 \\
+                0 & 0 & 1
+            \end{bmatrix}
+            -
+            x
+            \begin{bmatrix}
+                0 & 1 & 0 \\
+                1 & 0 & 1 \\
+                1 & 0 & 0
+            \end{bmatrix}
+        \right)^{-1}
+        =
+        \left(
+            \begin{bmatrix}
+                1 & -x & 0 \\
+                -x & 1 & -x \\
+                -x & 0 & 1
+            \end{bmatrix}
+        \right)^{-1}
+    \]
+
+    $A^{\prime \prime}$ can be simplified to:
+
+    \[
+        A^{\prime \prime} =
+        \begin{bmatrix}
+            x^2 + 1 & x & x^2 \\
+            x^2 + x & x^2 + 1 & x \\
+            x & x^2 & 1
+        \end{bmatrix}
+    \]
+
+    We will cover why the above matrix corresponds to the inverse of $(I - xA)$ in the section~\ref{sec:3.3.4}, but for now, notice how the \emph{coefficient} of the $x^n$ term of each entry $A^{\prime \prime}_{(s, t)}$ indicate the number of $s$-$t$ paths of length $n$. It may occur to you that if we can find an algorithm to efficiently compute $A^{\prime \prime}$ for a given graph, we can solve \texttt{APSP} by simply looking at the lowest degree term of each $A^{\prime \prime}_{(s, t)}$ entry with a non-zero coefficient.
+\end{quote}
+
+The example above shows us what we can expect from the matrix $A^{\prime \prime}$, but before we can take the results for granted, we must discuss the details of polynomial matrices make mathematical sense.
+
+\subsubsection{How are Polynomial Matrices Defined?} \label{sec:3.3.4}
+
+Before we get ahead of ourselves, let's understand how exactly we can even define matrices over polynomials and how we can expect them to have inverses. To understand this properly, we will be referring to the abstract algebra concepts we defined in section~\ref{sec:3.2}.
+
+We traditionally think of matrices as algebraic structures that contain numbers, but in reality we just make the assumption that the matrices we encounter are defined over a \emph{ring} $R$ that contains the real numbers. To pass from ``numeric'' matrices to polynomial matrices, we must consider defining matrices over the ring $R[x]$, which replaces each scalar in $R$ with a polynomial in the indeterminate $x$.
+
+Let's be a little more precise in what we mean. For our matrix $A^{\prime \prime}$, we notice that any entry $A^{\prime \prime}_{(s, t)}$ is of the form
+
+\[
+    A^{\prime \prime}_{(s, t)} = \alpha_0 x^0 + \alpha_1 x^1 + \cdots
+\]
+
+where $\alpha_0, \alpha_1, \ldots$ are \emph{integers} in $\mathds{Z}$. We can specifically define $R[x]$ as a ring that suits this purpose. In particular:
 
 \begin{enumerate}
-    \item Polynomial matrices make sense because we want to separate the number of n-degree paths using indeterminates ($x, x^2, x^3, \ldots$)
-    \item When we define polynomial matrices, we have to define them over a commutative wraparound ring $\mathds{Z} \backslash \langle x^h \rangle$. This means we are no longer restricted to fields. Finally we tie this into \emph{hinting} that we only need to update portions of the matrix, implying dynamic algorithm
+    \item $R[x]$ is defined over the set of polynomial with integer coefficients, which is represented as $\mathds{Z}[x]$
+    \item $(R[x], \oplus)$ is defined as typical polynomial addition where we can combine like terms
+    \item $(R[x], \otimes)$ is defined as typical polynomial multiplication, which involves convolving the coefficients of each polynomial
 \end{enumerate}
+
+While this definition of $R[x]$ allows us to define polynomial matrices, we still cannot assume that a polynomial matrix has an inverse, which we use in our $A^{\prime \prime}$ identity. Recall earlier where we specifically defined the identity for $A^{\prime}$ to only work over \emph{fields}, where every non-zero scalar was defined to have a multiplicative inverse and we also assumed that we only deal with \texttt{DAG}s to get rid of the infinite matrix sum. While we cannot make the same assumptions for a general commutative ring like $R[x]$, we can show that under the below listed conditions, the matrix $A^{\prime \prime} = (I - xA)^{-1}$ always entries that have a multiplicative inverse and are finite series.
+
+\begin{enumerate}
+    \item To make sure that all the entries of $A^{\prime \prime}$ are finite, we can define all polynomial arithmetic to consider only polynomial modulo $x^h$. Specifically, we will redefine $R[x]$ as $\mathds{Z}[x] / \langle x^h \rangle$. When we talk about a polynomial modulo $x^h$, we simply mean that we truncate all of the polynomial terms that have a degree greater than $h$.
+
+        {\footnotesize A size effect of considering only $\mathds{Z}[x] / \langle x^h \rangle$ is that we won't be able use $A^{\prime \prime}$ to track paths of length greater than $h$. We will discuss this more in section~\ref{sec:3.5} and section~\ref{sec:4}}
+
+    \item In the ring $R[x] = \mathds{Z}[x] / \langle x^h \rangle$, the polynomial $p(x)$ is a unit (i.e. invertible) if and only if its constant term is a unit in $\mathds{Z}$. In other words,
+
+        \[
+            p(x) = \alpha_0 x^0 + \alpha_1 x^1 + \cdots + \alpha_{h - 1} x^{h - 1}
+        \]
+
+        and we notice that there cannot be a $q(x)$ such that $p(x) \cdot q(x) \equiv 1 \mod x^h$ if $\alpha_0$ is not invertible in $\mathds{Z}$. Since we defined $(A^{\prime \prime})^{-1} = (I - xA)$, entries along the diagonal of $(I - xA)$ must have a non-zero constant term. We may notice in this matrix that the identity matrix guarantees constant terms of 1 along the diagonal, so we can confidently say that $(I - xA)$ always has an inverse in $\mathds{Z}[x] / \langle x^h \rangle$. It can further be proven that a matrix of the form $(I - xA)$ has an inverse in \emph{any} ring, but we'll spare you the detailed proof.
+\end{enumerate}
+
+Due to the conditions we enforce above, we can guarantee that $A^{\prime \prime}$ exists. If you recall from section~\ref{sec:3.3.3}, we magically computed the inverse of an example $(I - xA)$ matrix. Using our knowledge of the ring $\mathds{Z}[x] / \langle x^h \rangle$, we can show the work for computing the inverse below:
+
+\begin{quote}
+    \[
+        (I - xA) =
+        \begin{bmatrix}
+            1 & -x & 0 \\
+            -x & 1 & -x \\
+            -x & 0 & 1
+        \end{bmatrix}
+        \qquad
+        (I - xA)^{-1} =
+        \begin{bmatrix}
+            x^2 + 1 & x & x^2 \\
+            x^2 + x & x^2 + 1 & x \\
+            x & x^2 & 1
+        \end{bmatrix}
+    \]
+
+    Let's compute $(I - xA)^{-1} (I - xA)$ and show that it equals the identity matrix:
+
+    \[
+        \begin{split}
+            (I - xA)^{-1} (I - xA) &=
+            \begin{bmatrix}
+                1 - x^3 & -x^3 & 0 \\
+                -2x^3 & -x^3 + 1 & -x^3 \\
+                -x^3 & 0 & -x^3 + 1
+            \end{bmatrix} \\
+            &=
+            \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & 1 & 0 \\
+                0 & 0 & 1
+            \end{bmatrix}
+            \mod x^h
+        \end{split}
+    \]
+
+    If we take $h = 3$, we truncate all terms of each polynomial of degree $h$ or greater. Therefore, you can notice how $(I - xA)^{-1} (I - xA)$ is actually the identity matrix.
+\end{quote}
+
+Now that we have covered the fundamentals of polynomial matrices, in the next sections, we will talk about intelligent ways to modify them dynamically, allowing us to conclude how we might arrive at Jan van den Brand's algorithm.
 
 \subsection{Edge Updates}
 
@@ -425,20 +579,35 @@ Now, by computing the matrix $A^{\prime} = (I - A)^{-1}$, we have a new matrix w
     \item Keep most of the original document's part on edge updates. Looks good
 \end{enumerate}
 
-\subsection{Hitting Sets}
+\subsection{Hitting Sets} \label{sec:3.5}
 
 \begin{enumerate}
     \item Arjun will finish this part tomorrow morning
 \end{enumerate}
 
-\section{Solution}
+\section{Solution} \label{sec:4}
 
-\begin{enumerate}
-    \item Almost exactly keep what we have already, just split between the two categories listed below
-\end{enumerate}
+**TODO: add latex formatting, fix mistakes
 
 \subsection{Algorithm}
+
+Using the technical background, we have everything we need to go through the dynamic all-pairs-distance algorithm. There are two parts to this algorithm, starting with maintaining the $h$ bounded shortest path distances. These are the distances between node pairs where h is the maximum length of the shortest path. We use the inverse of the polynomial matrix $I + xA$ over a truncated ring to do this, where A is the adjacency matrix of the graph, and the minimum degree of x in an entry (i, j) represents the shortest distance between nodes i and j. The Sherman-Morrison identity is then used to maintain the inverse of $I + xA$, for updates that affect edges incident to a single vertex.
+
+The next part involves extending the h-bound pair distances to cover all distances. We do this using hitting sets, where we randomly pick $\frac{n}{h}$ nodes from the original graph. This is based on the idea that any long path is highly likely to pass through at least one of the randomly sampled nodes. We then construct an auxiliary graph, where each node is connected to the sampled nodes using the short distances from before up to length h. For every node v in the graph, and for every sampled node r in R, we add an edge from v to r with the weight being the h-bounded distance from v to r. We also add an edge from r to v with the weight being the h-bounded distance from r to v. Now, we have a graph where every node is connected to every sampled node using the h-bounded distances.
+
+Finally, we run Dijkstra's algorithm for each node v on the auxiliary graph to compute the shortest paths. We store the computed distances from v to all other nodes, giving us $dist_H(v, u)$, which gives an accurate estimation for the shortest path distances from sampled nodes.
+
+In the end, we have two pieces of information to work with. We have the h-bounded distances, $dist_G^h(s, t)$, which are exact for the paths of length $\leq h$. We also have the auxiliary graph distances, $dist_H(s, t)$, which are accurate for longer paths greater than h. For each node pair (s, t), we return $\min({dist_G^h(s, t), dist_H(s, t)})$.
+
+If the real shortest path from s to t is less than or equal to h, then $dist_hG(s, t)$ is correct. On the other hand, if the real path is longer than h, then $dist_H(s, t)$ will very likely be correct. The final result is defined as $dist_hG(s, t)$, which represents the true shortest path.
+
 \subsection{Time Complexity Analysis}
+
+In the first part, where we are maintaining h-bounded distances, initialization is in $O(hn^3)$ time, and updates are in $O(hn^2)$ time for each node update. In total, This takes $O(hn^3)$ time.
+
+For the second part, where we extended the h bound distances to all distances. This takes $O(n^3/h)$ time per update, since we run Dijkstra's algorithm frome very node on the auxiliary graph, of size n with $O(n^2/h)$ nodes.
+
+Combining these steps, the total update time is $O(hn^2 + n^3/h)$ time. When we set $h = \sqrt{n}$ to balance the two terms, this simplifies to $O(n^{2.5})$ time. This is much faster than traditional algorithms  like Floyd-Warshall, which requires $O(n^3)$ time per update.
 
 \section{Extension and Comparison}
 
