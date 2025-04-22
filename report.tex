@@ -571,50 +571,66 @@ Due to the conditions we enforce above, we can guarantee that $A^{\prime \prime}
     If we take $h = 3$, we truncate all terms of each polynomial of degree $h$ or greater. Therefore, you can notice how $(I - xA)^{-1} (I - xA)$ is actually the identity matrix.
 \end{quote}
 
+It might occur to you that the simplest way to compute $A^{\prime \prime}$ would be to simply take the sum of the first $h$ powers of $A$. To compute every next power of $A$, $A^{i + 1} = A^i \times A$, so we will require a total of $h$ matrix multiplications that take $\bigO(n^3)$ time each naively. Therefore, we can say to initialize the data structure that holds $A^{\prime \prime}$, we require $\bigO(h n^3)$ time. Doesn't this seem rather inefficient compared to just using the Floyd-Warshall algorithm in $\bigO(n^3)$ time? Well, the benefit of using this data structure is that we can more efficiently support computing \texttt{APSP} on graphs that \emph{change} after initialization. This is the essence of dynamic algorithms, as we tradeoff potentially heavier initialization costs for lighter costs to compute changes. We will explore how exactly we achieve better update efficiency in the next section.
+
 Now that we have covered the fundamentals of polynomial matrices, in the next sections, we will talk about intelligent ways to modify them dynamically, allowing us to conclude how we might arrive at Jan van den Brand's algorithm.
 
-\subsection{Edge Updates}
-
-\begin{enumerate}
-    \item Keep most of the original document's part on edge updates. Looks good
-\end{enumerate}
+\subsection{Edge Updates} \label{sec:3.4}
 
 \subsection{Hitting Sets} \label{sec:3.5}
 
-\begin{enumerate}
-    \item Arjun will finish this part tomorrow morning
-\end{enumerate}
+In section~\ref{sec:3.4}, we covered how we can manipulate polynomial matrices to track \texttt{APSP} for path lengths up to length $h$ in $\displaystyle \tilde \bigO(hn^2)$ time per node update. One limitation of tracking the \texttt{APSP} using $A^{\prime \prime}$ from section~\ref{sec:3.3.3} is that we only track shortest $s$-$t$ paths of length $h$, since we assumed that all polynomial arithmetic would be limited by modulus $x^h$ on the ring $\mathds{Z}[x] / \langle x^h \rangle$. However, a shortest $s$-$t$ path may have a length that is greater than $h$, so how would we recover such paths without defaulting to Floyd-Warshall's algorithm that takes $\bigO(n^3)$ time?
+
+To track the shortest paths of an arbitrary length $n$, we would need to find a way to deal with ``chunks'' of the path that are only of length $h$. A straightforward way to do this is to somehow subdivide the nodes of the graph $G$ into a new graph $H$ of $\frac{n}{h}$ nodes, where each node somehow is capable of representing a $\frac{n}{h}$ section of nodes from $G$. It turns out that we can subdivide the original graph $G$ by randomly sampling some $\frac{n}{h}$ nodes, with a high probability that shortest paths pass through the randomly sampled $\frac{n}{h}$ nodes of $H$.
+
+Let's formalize this approach:
+
+\begin{quote}
+    We define the reduced graph $H(V, E^{\prime})$ as a graph with the following properties using only the $h$-bounded distances from $A^{\prime \prime}$:
+
+    \begin{enumerate}
+        \item $V$ is the same vertex set as in $G(V, E)$
+        \item $E^{\prime}$ can be defined in the following manner:
+
+            Define $R \subseteq V$ such that $|R| = \displaystyle \tilde \bigO(\frac{n}{h})$. We pick $R$ from $V$ uniformly at random.
+
+            For \emph{every} $v \in V$ and \emph{every} $r \in R$, we add \emph{only} the following edges into $E^{\prime}$: $(1)$, we add the directed edge $v \to r$ with a weight of $\mathrm{dist}_{h-bounded}(v, r)$ and $(2)$, we add the edge $r \to v$ with a weight of $\mathrm{dist}_{h-bounded}(r, v)$. In simpler terms, we're building a ``hub-and-spoke'' mini-graph: for every node $v$ and every landmark $r \in R$, we're adding exactly two directed spokes\textemdash one $v \to r$ and the other $r \to v$\textemdash and we label each with the true distance in $G$.
+
+            For the sake of being explicit, notice that $H$ has $|V| \times |R| \times \bigO(\frac{n}{h}) = 2 \times n \times \bigO(\frac{n}{h}) = \bigO(\frac{n^2}{h})$ edges.
+    \end{enumerate}
+
+    Below is a visualization for your convenience:
+
+    \begin{center}
+        \includegraphics[scale=0.4]{media/Figure_4.png}
+    \end{center}
+
+    With this structure for $H$, we can be confident that \emph{every} shortest path of a length greater than or equal to $h$ hits some $r \in R$ within each consecutive block of $h$ edges. In other words, every long $s$-$t$ path in $G$ can be ``stitched together'' in $H$ by hopping from one landmark node $r \in R$ to the next in steps guaranteed to be at most $h$ edges, so that the total cost in $H$ exactly matches the cost of the $s$-$t$ path in $G$.
+
+    Why is this? Since we know $|R| = \displaystyle \tilde \bigO(\frac{n}{h})$, we can restate this as $|R| = \frac{p \cdot n}{h}$ for some $p \in \mathds{N}$.
+
+    For a fixed $(s, t)$ whose shortest path has a length that is greater than or equal to $h$, we can say the probability that none of the first $h$ vertices lie in $R$ is:
+
+    \[
+        \left( 1 - \frac{|R|}{n} \right)^h \leq \left( 1 - \frac{\frac{p n}{h}}{n} \right)^h = \left( 1 - \frac{p}{h} \right)^h \leq e^{-p} = 2^{-\Omega(p)}
+    \]
+
+    {\footnotesize Recall, $(1 - \frac{x}{k})^k \leq e^{-x}$, and $e^{-p} = (2^{\ln e})^{-p} = (2^{\frac{1}{\ln 2}})^{-p}$, and $\Omega(p) = \frac{p}{\ln 2} \therefore e^{-p} = 2^{-\Omega(p)}$}
+
+    There are at most $n^2$ choices for pairs of $(s, t)$, therefore, the probability that \emph{some} pair fails to ``hit'' $R$ is $n^2 \cdot 2^{\Omega(p)}$, which implies that the probability that every pair ``hits'' $R$ is $1 - \frac{n^2}{2^{-\Omega(p)}}$.
+
+    Supposing that $\mathrm{dist}_G(s, t) \geq h$, we know the probability that we ``hit'' a single node in $R$ within $h$ nodes is $1 - \frac{n^2}{2^{-\Omega(p)}}$. Once we ``hit'' the first landmark node $r_0$, if the remaining length of the $s$-$t$ path is greater than or equal to $h$, we again face the probability of $1 - \frac{n^2}{2^{-\Omega(p)}}$ to ``hit'' another landmark node in $R$ within an additional $h$ nodes Therefore, we can reliably write any $s$-$t$ path as a dependency chain as follows: $s \to r_0 \to r_1 \to \cdots \to r_{i \leq \frac{n}{h}} \to t$.
+\end{quote}
+
+Above, we saw how we can convert our original graph $G$ with $n$ nodes into a reduced graph $H$ with $\frac{n}{h}$ landmark nodes which are strongly connected to all non-landmark nodes. Just to be precise, remember that while $H$ also has $n$ nodes like $G$, our landmark nodes are in the set $R \subseteq V$ and $|R| = \displaystyle \tilde \bigO(\frac{n}{h})$. Now, let's discuss precisely how we can recover $s$-$t$ paths of length greater than or equal to $h$ using our reduced graph $H$.
+
+We know that $\mathrm{dist}_G(s, t) = \min \{\mathrm{dist}_{h-bounded}(s, t), \mathrm{dist}_H(s, t)\}$, since either there is a smaller than $h$-length $s$-$t$ path already present in $A^{\prime \prime}$ or we need to use our reduced graph $H$ to compute the distance. To compute the $s$-$t$ path distance on $H$, we can simply use Dijkstra's algorithm to solve \texttt{APSP} for $H$. This has a time complexity of $\bigO(|V| \times |E^{\prime}) = \bigO(n \times \frac{n^2}{h}) = \bigO(\frac{n^3}{h})$.
 
 \section{Solution} \label{sec:4}
-
-**TODO: add latex formatting, fix mistakes
-
 \subsection{Algorithm}
-
-Using the technical background, we have everything we need to go through the dynamic all-pairs-distance algorithm. There are two parts to this algorithm, starting with maintaining the $h$ bounded shortest path distances. These are the distances between node pairs where h is the maximum length of the shortest path. We use the inverse of the polynomial matrix $I + xA$ over a truncated ring to do this, where A is the adjacency matrix of the graph, and the minimum degree of x in an entry (i, j) represents the shortest distance between nodes i and j. The Sherman-Morrison identity is then used to maintain the inverse of $I + xA$, for updates that affect edges incident to a single vertex.
-
-The next part involves extending the h-bound pair distances to cover all distances. We do this using hitting sets, where we randomly pick $\frac{n}{h}$ nodes from the original graph. This is based on the idea that any long path is highly likely to pass through at least one of the randomly sampled nodes. We then construct an auxiliary graph, where each node is connected to the sampled nodes using the short distances from before up to length h. For every node v in the graph, and for every sampled node r in R, we add an edge from v to r with the weight being the h-bounded distance from v to r. We also add an edge from r to v with the weight being the h-bounded distance from r to v. Now, we have a graph where every node is connected to every sampled node using the h-bounded distances.
-
-Finally, we run Dijkstra's algorithm for each node v on the auxiliary graph to compute the shortest paths. We store the computed distances from v to all other nodes, giving us $dist_H(v, u)$, which gives an accurate estimation for the shortest path distances from sampled nodes.
-
-In the end, we have two pieces of information to work with. We have the h-bounded distances, $dist_G^h(s, t)$, which are exact for the paths of length $\leq h$. We also have the auxiliary graph distances, $dist_H(s, t)$, which are accurate for longer paths greater than h. For each node pair (s, t), we return $\min({dist_G^h(s, t), dist_H(s, t)})$.
-
-If the real shortest path from s to t is less than or equal to h, then $dist_hG(s, t)$ is correct. On the other hand, if the real path is longer than h, then $dist_H(s, t)$ will very likely be correct. The final result is defined as $dist_hG(s, t)$, which represents the true shortest path.
-
 \subsection{Time Complexity Analysis}
 
-In the first part, where we are maintaining h-bounded distances, initialization is in $O(hn^3)$ time, and updates are in $O(hn^2)$ time for each node update. In total, This takes $O(hn^3)$ time.
-
-For the second part, where we extended the h bound distances to all distances. This takes $O(n^3/h)$ time per update, since we run Dijkstra's algorithm frome very node on the auxiliary graph, of size n with $O(n^2/h)$ nodes.
-
-Combining these steps, the total update time is $O(hn^2 + n^3/h)$ time. When we set $h = \sqrt{n}$ to balance the two terms, this simplifies to $O(n^{2.5})$ time. This is much faster than traditional algorithms  like Floyd-Warshall, which requires $O(n^3)$ time per update.
-
 \section{Extension and Comparison}
-
-\begin{enumerate}
-    \item Yiqi is working on it.
-\end{enumerate}
-
 \subsection{Broader Algebraic Structures}
 \subsection{General Update Query}
 \subsection{Multiple Matrix Functions}
