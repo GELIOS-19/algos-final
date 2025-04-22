@@ -255,10 +255,17 @@ It turns out this is entirely possible as long as our overridden $+$ and $\times
     $S$ is an algebraic \emph{semiring} defined as $(S, \oplus, \otimes)$. The below conditions must be met:
 
     \begin{enumerate}
-        \item $(S, \oplus)$ is an Abelian group. In other words, it satisfies the commutative property that $\forall a, b \in S : a \oplus b = b \oplus a$ and it satisfies the identity that $\forall a \in S : a \oplus 0_S = a$, where $0_S$ refers to the zero element in $S$.
+        \item $(S, \oplus)$ is an abelian group. In other words, it satisfies the commutative property that $\forall a, b \in S : a \oplus b = b \oplus a$ and it satisfies the identity that $\forall a \in S : a \oplus 0_S = a$, where $0_S$ refers to the zero element in $S$.
         \item $(S, \otimes)$ is a monoid. In other words, it satisfies the identity $\forall a \in S : a \otimes I = a$, where $I$ refers to the identity element, which can typically be thought of as 1.
         \item The $\otimes$ operation must distribute over the $\oplus$ operation. In other words, $\forall a, b, c \in S : a \otimes (b \oplus c) = a \otimes b \oplus a \otimes c$.
         \item $0_S$ is an annihilator in $\otimes$. In other words, $\forall a \in S : a \otimes 0_S = 0_S \otimes a = 0_S$.
+    \end{enumerate}
+
+    Alternatively, we define $F$ as an algebraic \emph{field}, denoted as $(F, \oplus, \otimes)$ if it meets the below conditions:
+
+    \begin{enumerate}
+        \item $(F, \oplus)$ is an abelian group.
+        \item $(F \backslash \{0\}, \otimes)$ is also an abelian group, which implies the existence of a multiplicative inverse for every non-zero element.
     \end{enumerate}
 
     {\footnotesize Note, the difference between a \emph{ring} and a \emph{semiring} is that a semiring does not need to support the additive inverse. Meaning, there does not necessarily have to be a ``negative'' corresponding to each element. Additionally, note that $\otimes$ does not have to be commutative.}
@@ -300,6 +307,8 @@ Our repeated squaring approach can take as little as $\bigO(n^3 \log(n))$ time i
 \subsection{Polynomial Matrices} \label{sec:3.3}
 
 Now, let's really start building the foundation to Jan van den Brand's \texttt{APSP} algorithm by taking about adjacency matrices with polynomial entries!
+
+\subsubsection{Unweighted Adjacency Matrices}
 
 First let's build some intuition for why we might want to build polynomial adjacency matrices. Going forward, we are specifically going to talk about \emph{unweighted} adjacency matrices where $A_{(s, t)} = 1$ if there is a directed edge $s \to t$ and $0$ otherwise. When we refer to simple unweighted adjacency matrices, it turns out we can use simple powers of $A$ (ie. $A, A^2, A^3, \ldots, A^n$) and the traditional operations $+$ and $\times$ to achieve a similar effect to our min-plus repeated squaring algorithm that we explained in section~\ref{sec:3.2}. However, instead of tracking in the $A^n_{(s, t)}$ the shortest path between start node $s$ and terminal node $t$ using up to $n$ intermediate nodes, in the $A^n_{(s, t)}$ position, we are instead tracking the number of paths that \emph{exist} between $s$ and $t$ on \emph{exactly} $n$ nodes. Why exactly is this? Let's consider a simple example with the graph below:
 
@@ -376,20 +385,67 @@ First let's build some intuition for why we might want to build polynomial adjac
 
     % Here, $u$ represents the existence of paths starting at $B$ and ending at any other node in the graph, and $v$ represents the existence of paths starting from any other node in the graph and ending at $C$. Since it is obvious from the graph picture that $B$ has an out-degree of 0 and $C$ has an in-degree of 0, vectors $u$ and $v$ are unremarkably 0 vectors. Therefore, their dot product is also 0 and we find that $A^2_{(B, C)} = 0$.
 
-    It might be self-explanatory why paths that cannot be formed, for example $B \to C$ will have $A^n_{(B, C)} = 0 \quad \forall n \in \mathds{Z}^+$.
+    It might be self-explanatory why paths that cannot be formed with any number of intermediate nodes, for example $B \to C$ will have $A^n_{(B, C)} = 0 \quad \forall n \in \mathds{Z}^+$.
 \end{quote}
 
-Let's try something new now
+\subsubsection{Matix Series Identity}
+
+Let's try something new now. What happens if we want to form the accumulated adjacency matrix $A^{\prime}$ where $A^{\prime}_{(s, t)}$ tracks the total number of $s$-$t$ paths that can take any number of intermediate nodes? A straightforward thing to do would be to consider the sum of matrices of powers counting from 0 to $h$, since each power represents the number of $s$-$t$ paths on exactly $power - 1$ intermediate nodes.
+
+\[
+    A^{\prime} = A^0 + A^1 + A^2 + A^3 + \cdots
+\]
+
+Does this look familiar to you? You might notice that this sum has a similar format to the infinite power series. Note that $A^0 = I$, and the identity matrix adds 1's along the diagonal, which simply adds circular edges from each node to itself. This does not impact any calculations.
+
+We know that a formal power series of the form $1 + x + x^2 + \cdots$ can be represented by the generating function
+
+\[
+    \frac{1}{1 - x} = 1 + x + x^2 + \cdots
+\]
+
+Interestingly, under the conditions of adjacency matrices representing directed acyclic graphs, or over a field with random weights, we can use a ``generating function'' to efficiently compute $A^{\prime}$ as well! In particular, we can use the below identity:
+
+\[
+    (I - A)^{-1} = A^0 + A^1 + A^2 + A^3 + \cdots
+\]
+
+Now, by computing the matrix $A^{\prime} = (I - A)^{-1}$, we have a new matrix we can use to check the existence of an $s$-$t$ path. The $A^{\prime}_{(s, t)}$ entry will be non-zero if a path exists from $s$ to $t$ on any number of intermediate nodes, or $0$ if otherwise. To understand this identity rigorously, we can recall our abstract algebra concepts from section~\ref{sec:3.2}. Notably, our identity only works for \texttt{DAG}s and field matrices since we need a defined multiplicative inverse to be defined. In a field, every nonzero scalar has an inverse, and determinants live there, so you can talk about $\det(I - A)\neq 0$ and hence $(I - A)^{-1}$ exists.  In an arbitrary ring (say \(\mathbb Z\) or a semiring), you can't guarantee that. Additionally, we need the series $A^0 + A^1 + A^2 + A^3 + \cdots$ to eventually stop since an infinite sum of matrices does not have much meaning unless the tail vanishes. On a \texttt{DAG}, we know the adjacency matrix $A^n = 0$ since there are no paths of length $n$, as the longest path is of length $n - 1$. However, we will be covering how we can adapt some of these restrictions to general commutative rings so that our algorithm can cover a broader range of matrices.
+
+\subsubsection{Polynomial Matrices as the Next Intuitive Step}
+
+\begin{enumerate}
+    \item Polynomial matrices make sense because we want to separate the number of n-degree paths using indeterminates ($x, x^2, x^3, \ldots$)
+    \item When we define polynomial matrices, we have to define them over a commutative wraparound ring $\mathds{Z} \backslash \langle x^h \rangle$. This means we are no longer restricted to fields. Finally we tie this into \emph{hinting} that we only need to update portions of the matrix, implying dynamic algorithm
+\end{enumerate}
 
 \subsection{Edge Updates}
+
+\begin{enumerate}
+    \item Keep most of the original document's part on edge updates. Looks good
+\end{enumerate}
+
 \subsection{Hitting Sets}
 
-% Minimal effort conversion from the original document
+\begin{enumerate}
+    \item Arjun will finish this part tomorrow morning
+\end{enumerate}
+
 \section{Solution}
+
+\begin{enumerate}
+    \item Almost exactly keep what we have already, just split between the two categories listed below
+\end{enumerate}
+
 \subsection{Algorithm}
 \subsection{Time Complexity Analysis}
 
 \section{Extension and Comparison}
+
+\begin{enumerate}
+    \item Yiqi is working on it.
+\end{enumerate}
+
 \subsection{Broader Algebraic Structures}
 \subsection{General Update Query}
 \subsection{Multiple Matrix Functions}
