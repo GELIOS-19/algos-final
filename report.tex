@@ -127,7 +127,7 @@ Additionally, we will be extending this theorem using Sankowski's paper:
 
 We will be covering general overviews of topics that help toward understanding the intuition behind these theorems in the next section.
 
-\section{Technical Background}
+\section{Technical Background} \label{sec:3}
 
 \subsection{Matrix Multiplication Recap and Naive APSP} \label{sec:3.1}
 
@@ -629,14 +629,29 @@ We know that $\mathrm{dist}_G(s, t) = \min \{\mathrm{dist}_{h-bounded}(s, t), \m
 In section~\ref{sec:3.4}, we saw how we can achieve a time complexity of only $\bigO(h n^2)$ to update our $A^{\prime \prime}$ data structure. When we update our reduced graph $H$, we only need to update the edges from the new node $v$ to each $r \in R$ and from each $r \in R$ to $v$. This takes $\bigO(|R|) = \bigO(\frac{n}{h})$ time. Since we need to follow this up with an additional run of Dijkstra's algorithm, we can see the total update cost for $H$ is $\bigO(|V| \times |R|) = \bigO(n \times \frac{n}{h}) = \bigO(\frac{n^2}{h})$ time.
 
 \section{Solution} \label{sec:4}
-\subsection{Algorithm}
-\subsection{Time Complexity Analysis}
+
+Using the technical background from section~\ref{sec:3}, we have everything we need to go through the dynamic \texttt{APSP} algorithm from Jan van den Brand's notes.
+
+Let's walk through the algorithm start to finish! Let's start with maintaining the $h$ bounded shortest path distances. These are the distances between node pairs where $h$ is the maximum length of the shortest path. We use the inverse of the polynomial matrix, $A^{\prime \prime} = (I - xA)^{-1}$, over a truncated ring $R[x] = \mathds{Z}[x] / \langle x^h \rangle$ to do this, where $A$ is the adjacency matrix of the graph, and the minimum degree of $x$ in an entry $A^{\prime \prime}_{(s, t)}$ represents the shortest distance between nodes $s$ and $t$. The Sherman-Morrison identity is then used to modify the inverse matrix, $A^{\prime \prime}$, for updates that affect edges incident to a single vertex.
+
+The next part involves extending the $h$-bound pair distances to cover distances of arbitrary length $n$. We do this using hitting sets, where we randomly pick $\frac{n}{h}$ nodes from the original graph. This is based on the idea that any long path is highly likely to pass through at least one of the randomly sampled nodes. We then construct a reduced graph $H$, where each node is connected to the sampled nodes using the short distances from before up to length $h$.
+
+Finally, we run Dijkstra's algorithm for each node $v$ on the auxiliary graph to compute the shortest path between $v$ and every landmark node $r$. We store the computed \texttt{APSP} on $H$.
+
+In the end, we have two pieces of information to work with. We have the $h$-bounded distances in $A^{\prime \prime}$, represented by $\mathrm{dist}_{h-bounded}(s, t)$, which are exact for the paths of length $\leq h$. We also have the reduced graph distances stored in $H$, represented by $\mathrm{dist}_H(s, t)$, which are accurate for longer paths greater than $h$. For each node pair $(s, t)$, we return $\min({\mathrm{dist}_{h-bounded}(s, t), \mathrm{dist}_H(s, t)})$ as $\mathrm{dist}_G(s, t)$.
+
+To analyze the time complexity of this algorithm, we can analyze the time complexities related to the two data structures we maintain: $A^{\prime \prime}$ and $H$:
+
+\begin{enumerate}
+    \item We need to initialize our data structure from \textbf{theorem 1.0.0}, which is essentially our matrix $A^{\prime \prime} = (I - xA)^{-1}$ from section~\ref{sec:3.3.3}, combined with our reduced graph $H$ mentioned in section~\ref{sec:3.5}. As we mentioned at the end of section~\ref{sec:3.3.4}, it takes $\bigO(h n^3)$ time to initialize $A^{\prime \prime}$, and taking $h = \sqrt{n}$ as mentioned in section~\ref{sec:3.4}, we can accomplish this in $\bigO(n^{3.5})$ time. Additionally, as mentioned at the end of section~\ref{sec:3.5}, it takes $\bigO(\frac{n^3}{h})$ time to initialize $H$, and taking $h = \sqrt{n}$, we find it takes $\bigO(n^{2.5})$ time. In total, initialization takes $\bigO(n^{3.5} + n^{2.5}) = \bigO(n^{3.5})$ time, as desired from the theorem.
+    \item We need to update our data structure mentioned in the previous part. As mentioned in section~\ref{sec:3.4}, we can accomplish adding and removing an edge from $A^{\prime \prime}$ using a \emph{rank-one} update in $\bigO(h n^2)$, which taking $h = \sqrt{n}$, is $\bigO(n^{2.5})$ time. In order to update our reduced graph $H$, we take $\bigO(\frac{n^2}{h})$ time as mentioned at the end of section~\ref{sec:3.5}. Again, taking $h = \sqrt{n}$, we get an update time of $\bigO(n^{1.5})$. In total, we have an update time complexity of $\bigO(n^{2.5} + n^{1.5}) = \bigO(n^{2.5})$, as desired from the theorem.
+\end{enumerate}
+
+Looking at the time complexities, it is obvious that the Floyd-Warshall algorithm is more efficient in initialization costs, as it takes $\bigO(n^3)$ to initialize compared to the $\bigO(n^{3.5})$ that Jan van den Brand's algorithm takes. However, Jan van den Brand's algorithm is more efficient when dealing with updating edges in the graph $G$, as we can effectively update \texttt{APSP} in $\bigO(n^{2.5})$ time whereas the Floyd-Warshall algorithm would have to be re-run, taking $\bigO(n^3)$ time again. We can see how Jan van den Brand's algorithm prioritizes dynamic update costs while the Floyd-Warshall algorithm prioritizes static cost.
 
 \section{Extension and Comparison}
 \subsection{Broader Algebraic Structures}
 \subsection{General Update Query}
-\subsection{Multiple Matrix Functions}
-\subsection{Better Complexity Bounds}
 
 \section*{References}
 
