@@ -726,8 +726,72 @@ To analyze the time complexity of this algorithm, we can analyze the time comple
 Looking at the time complexities, it is obvious that the Floyd-Warshall algorithm is more efficient in initialization costs, as it takes $\bigO(n^3)$ to initialize compared to the $\bigO(n^{3.5})$ that Jan van den Brand's algorithm takes. However, Jan van den Brand's algorithm is more efficient when dealing with updating edges in the graph $G$, as we can effectively update \texttt{APSP} in $\bigO(n^{2.5})$ time whereas the Floyd-Warshall algorithm would have to be re-run, taking $\bigO(n^3)$ time again. We can see how Jan van den Brand's algorithm prioritizes dynamic update costs while the Floyd-Warshall algorithm prioritizes static cost.
 
 \section{Extension and Comparison}
+
+In this section, we will briefly analyze differences between Jan van den Brand's algorithm which we corresponded to \textbf{theorem 1.0.0} and Sankowski's algorithm that we corresponded to \textbf{theorem 1.0.1}. Sankowski's algorithm primarily differs from Jan van den Brand's algorithm in how it conceptualizes adjacency matrices, which leads it to have more groundbreaking time complexities.
+
 \subsection{Broader Algebraic Structures}
+
+Sankowski's paper works directly with general commutative rings where division might not be defined or possible. The paper develops techniques using formal power series that avoid the need for division operations, expressing matrices as $A(u)$ = $I + u(A - I)$ and working in the ring of formal power series $R[[u]]$. This makes his approach applicable to a much wider range of mathematical structures (not limited to field structures particularly). In contrast, Jan van den Brand's algorithm restricts itself to contexts where polynomial division is possible, essentially requiring a field structure rather than just a ring, limiting its mathematical generality.
+
+{\footnotesize Even though we mentioned earlier that Jan van den Brand's algorithm works on general commutative rings, remember that we enforced certain conditions on the ring we used (i.e. polynomials modulo $h$, and we only took the inverse for our defined $A^{\prime \prime}$ matrix).}
+
+Sankowski's more general framework also provides a way to compute both determinant and matrix adjoint over a commutative ring. The adjoint approach is particularly significant as it works without requiring the matrix to be invertible, making it more robust. While we won't go into the details here, there is a significant relationship between the matrix adjoint and the matrix inverse which is pivotal to understanding this approach. As we know, Jan van den Brand's algorithm simplifies by focusing only on matrix inverse operations (this can be considered as working on the polynomial ring), losing some of the mathematical power and generality of Sankowski's approach, which can leverage different matrix functions depending on the specific problem requirements.
+
 \subsection{General Update Query}
+
+Looking at \textbf{Theorem 3.0.1} from the Jan van den Brand's notes, we see it describes a data structure with two main operations. First, an \textsc{Initialize} operation that works on an $n$-node graph and returns \texttt{APSP} in $O(n^{3.5})$ time. Second, an \textsc{Update} operation that handles changes to edges connected to a single vertex $v$ and returns \texttt{APSP} in $O(n^{2.5})$ time.
+
+In comparison, \textbf{Theorem 8} from Sankowski's original work shows a much more powerful result. It presents a randomized algorithm for the dynamic \texttt{APSP} problem in unweighted graphs that supports edge updates in $O(n^{1.932})$ time and queries in $O(n^{1.288})$ time. This is significantly faster than the $O(n^{2.5})$ time mentioned in \textbf{Theorem 3.0.1}.
+
+The proof of \textbf{Theorem 8} maintains several data structures:
+\begin{itemize}
+    \item A randomly chosen set $H$ of vertices.
+    \item An $n\times n$ matrix $D$ capturing shortest paths using at most $n^\mu$ edges.
+    \item A smaller matrix $B$ extracted from $D$, containing only the rows and columns corresponding to vertices in $H$.
+    \item The Kleene closure $B^*$ of the matrix $B$.
+\end{itemize}
+During updates, the matrix $D$ is updated using an algorithm from \textbf{Theorem 6}, taking
+\[
+    O\bigl(n^\mu \bigl(n^{1+\varepsilon} + n^{\omega(1,\varepsilon,1)-\varepsilon}\bigr)\bigr)
+\]
+time.
+
+\paragraph{Theorem 6.}
+There exists an algorithm for maintaining dynamic shortest distances up to length $k$ in an unweighted directed graph with update time
+\[
+    \tilde O\bigl(k\,(n^{\omega(1,\varepsilon,1)-\varepsilon} + n^{1+\varepsilon})\bigr)
+    \quad\text{and}\quad
+    \tilde O(k\,n^\varepsilon)
+\]
+query time. The core idea is to interpret the truncated power-series inverse
+\[
+    (I - uA)^{-1} \bmod u^{k+1}
+    \;=\;
+    \sum_{i=0}^{k} u^i\,A^i
+\]
+over the ring $\mathbb F[[u]]/\langle u^{k+1}\rangle$.  The coefficient of $u^i$ in entry $(s,t)$ counts the number of length-$i$ paths, so the smallest $i$ with nonzero coefficient is exactly the $s\!t$ distance bounded by $k$.  One then plugs this into a dynamic-matrix-inverse data structure over formal series and applies lazy update techniques to achieve the stated bounds.
+
+\paragraph{Theorem 8.}
+Combining Theorem 6 with a random-landmark decomposition yields a fully subquadratic algorithm for unbounded dynamic shortest-path queries in unweighted graphs, with expected update time $O(n^{1.932})$ and query time $O(n^{1.288})$.  Concretely, one maintains:
+\begin{enumerate}
+    \item A random landmark set $H\subset V$ of size $\tilde O(n^{1-\mu})$.
+    \item An $n\times n$ distance matrix $D$, accurate for paths of length $\le n^\mu$ (via Theorem 6).
+    \item The restricted $|H|\times|H|$ submatrix $B=D|_{H\times H}$ and its Kleene closure $B^*$.
+\end{enumerate}
+On each edge update, refreshing $D$, $B$, and recomputing $B^*$ costs
+\[
+    \tilde O\!\bigl(n^\mu(n^{1+\varepsilon}+n^{\omega(1,\varepsilon,1)-\varepsilon}) \;+\; n^{1+\mu}\;+\;n^{3-3\mu}\bigr),
+\]
+and choosing $\mu\approx0.357,\;\varepsilon\approx0.575$ balances these to $O(n^{1.932})$.  A query then returns
+\[
+    \min\!\bigl\{D_{s,t},\,\min_{p,q\in H}\!(D_{s,p}+B^*_{p,q}+D_{q,t})\bigr\}
+\]
+in $O(n^{1.288})$ time.
+
+\paragraph{Summary.}
+The small landmark core $B$ and its closure $B^*$ capture all long-range interactions among a sparse set of vertices, allowing “bridging” beyond the $k$-hop approximation in $D$ without ever paying $\Omega(n^2)$ per update.
+
+This shows why Sankowski's paper is more general and efficient. It not only handles both edge updates and node updates (as in Theorem 3.0.1), but does so with better time complexity. The comparison with Floyd-Warshall\textemdash which would require $O(n^3)$ time per update\textemdash further highlights how both approaches improve on the trivial solution, while Sankowski's original work achieves much better performance with its subquadratic time complexities.
 
 \section*{References}
 
