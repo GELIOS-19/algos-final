@@ -577,9 +577,85 @@ Now that we have covered the fundamentals of polynomial matrices, in the next se
 
 \subsection{Edge Updates} \label{sec:3.4}
 
+As we mentioned at the end of the previous section, the real benefit of using a polynomial matrix as our adjacency matrix in terms of time efficiency is that we can more effectively track \emph{changes} in \texttt{APSP} for \emph{changing} graphs as opposed to a simple re-running of the Floyd-Warshall algorithm. Let's explore exactly how we can be more efficient:
+
+\begin{quote}
+    We want to accomplish a time complexity that is better than $\bigO(n^3)$, which is the Floyd-Warshall time complexity, when we update our graph $G$ by either adding or removing nodes. When representing a graph $G$ as an adjacency matrix $A$, we realize that we can add or remove a direct edge by modifying the entry in $A_{(s, t)}$. One way we can mathematically represent this type of modification is through the expression:
+
+    \[
+        A + u \cdot v^{\top}
+    \]
+
+    where one of $u$ or $v$ is an elementary column vector $e_i$, which is a vector of all 0's and a 1 in the $i$-th position. It is important to note that $u$ and $v$ are both \emph{column} vectors (i.e they have the dimension of $n \times 1$, hence $n \times 1$ vector multiplied by a $1 \times n$ vector is an $n \times n$ matrix). You can see how if we set $u = e_i$, the \emph{row} vector $v^{\top}$ replaces the $i$-th row of $A$. Setting $v = e_i$ replaces the $i$-th column of $A$ with the \emph{column} vector $u$. We call these types of updates as \emph{rank-one} updates.
+
+    Why is this notation particularly useful? We can use an identity called the Sherman-Morrison Identity to efficiently calculate $A^{\prime \prime}$ using rank-one updates. Below is the Sherman-Morrison Identity:
+
+    \[
+        \begin{split}
+            (M + u v^{\top})^{-1} &= M^{-1} - \frac{M^{-1} u v^{\top} M^{-1}}{1 + v^{\top} M^{-1} u} \\
+            &= M^{-1} u (1 + v^{\top} M^{-1} u)^{-1} v^{\top} M^{-1}
+        \end{split}
+    \]
+
+    The derivation of this identity is not pivotal to understanding Jan van den Brand's algorithm, however, it is useful to understand why we can use this identity even though it requires a division which may not always be defined on a ring. In reality, we can invert $1 + v^{\top} M^{-1} u$ because the $M$ matrix is really just our $(1 - xA)$ matrix, which we provided an argument for being invertible in section~\ref{sec:3.3.4}. Let's extend the Sherman-Morrison Identity to our context to make this more obvious:
+
+    We want to compute $A^{\prime \prime \prime} = (I - x(A + u v^{\top}))^{-1}$. Note that $M = (A^{\prime \prime})^{-1} = (I - xA)$.
+
+    \begin{align*}
+        A'''
+        &= (I - x(A + u\,v^{\top}))^{-1} \\
+        &= (I - xA - x\,u\,v^{\top})^{-1} \\
+        &= (M - x\,u\,v^{\top})^{-1} \\[6pt]
+        \text{Let}\quad U = x\,u,\quad V^{\top} = -\,v^{\top}, & \\[3pt]
+        A'''
+        &= (M + U\,V^{\top})^{-1} \\
+        &\text{(by Sherman–Morrison)} \\[3pt]
+        A'''
+        &= M^{-1}
+        - M^{-1}\,U\,(I + V^{\top}M^{-1}U)^{-1}\,V^{\top}M^{-1} \\[6pt]
+        M^{-1}U
+        &= x\,M^{-1}u,
+        \quad
+        V^{\top}M^{-1}
+        = -\,v^{\top}M^{-1}, \\[3pt]
+        V^{\top}M^{-1}U
+        &= (-\,v^{\top})\,(M^{-1})\,(x\,u)
+        = -\,x\,(v^{\top}M^{-1}u), \\[3pt]
+        I + V^{\top}M^{-1}U
+        &= I - x\,(v^{\top}M^{-1}u), \\[6pt]
+        \therefore\quad
+        A'''
+        &= M^{-1}
+        - \bigl(x\,M^{-1}u\bigr)
+        \bigl(I - x\,(v^{\top}M^{-1}u)\bigr)^{-1}
+        \bigl(-\,v^{\top}M^{-1}\bigr) \\[3pt]
+        &= M^{-1}
+        + x\,M^{-1}u
+        \bigl(I - x\,(v^{\top}M^{-1}u)\bigr)^{-1}
+        v^{\top}M^{-1}
+    \end{align*}
+
+    We can see that the computation for $A^{\prime \prime \prime}$ depends on four operations:
+
+    \begin{enumerate}
+        \item $M^{-1} U$, an $n \times n$ polynomial matrix times an $n$ vector. For each of the $n^2$ entries of $M$, you multiply two $h$-degree polynomials, which takes $\bigO(h \log h)$ time using the Fast Fourier Transform (\texttt{FFT}). This multiplication totally takes $\bigO(h n^2)$ (omitting a negligible factor of $\log h$).
+        \item $V^{\top} M^{-1}$, similar to above, also takes $\bigO(h n^2)$.
+        \item $(M^{-1} U)(V^{\top} M^{-1})$, the outer product of two length-$n$ polynomial vectors: $n^2$ polynomial multiplications (since $n \times 1$ multiplied by $1 \times n$) at $\bigO(h \log h)$ each, for $\bigO(h n^2)$.
+        \item Inversion of the scalar polynomial $1 + V^{\top} M^{-1} U$ (degree $<h$): by repeated squaring, (similar to how we calculated the inverse of $A^{\prime \prime}$) and \texttt{FFT}-based multiplications takes $\bigO(h \log^2 h) \approx \bigO(h)$ (Since we have $\bigO(\log h)$ squares and a cost of $\bigO(h \log h)$ per square).
+    \end{enumerate}
+
+    Based on the above, we can see that computing $A^{\prime \prime \prime}$ using the Sherman-Morrison Identity takes $\bigO(h n^2 + h \log^2 h) = \bigO(h n^2)$ time, which beats $\bigO(n^3)$ from Dijkstra's depending on choice of $h$.
+\end{quote}
+
+It is important to observe that the polynomial-series coefficients can grow very large, making exact arithmetic expensive. To avoid this, we compute all coefficients modulo a large prime $p$, working over the finite field $\mathbb{Z}_p$. Of course, if the true number of $s$-$t$ paths is divisible by $p$, then the corresponding coefficient becomes zero modulo $p$, potentially masking reachability. However, by the Schwartz-Zippel lemma, any nonzero polynomial of degree at most $h$ can vanish modulo $p$ with probability at most
+\[
+    \frac{\deg(f)}{p} \;\le\;\frac{h}{p}.
+\]
+In particular, choosing $p>2h$ guarantees a failure probability of at most $\tfrac{1}{2}$. Moreover, if we repeat the construction independently for $O(\log n)$ different random primes $p_1,\dots,p_k$, then by a union bound the chance that any one of the $n^2$ entries is falsely zero in \emph{all} runs becomes negligible (e.g., $n^{-c}$ for any constant $c$). Hence, with high probability, no genuine reachability is lost.
+
 \subsection{Hitting Sets} \label{sec:3.5}
 
-In section~\ref{sec:3.4}, we covered how we can manipulate polynomial matrices to track \texttt{APSP} for path lengths up to length $h$ in $\displaystyle \tilde \bigO(hn^2)$ time per node update. One limitation of tracking the \texttt{APSP} using $A^{\prime \prime}$ from section~\ref{sec:3.3.3} is that we only track shortest $s$-$t$ paths of length $h$, since we assumed that all polynomial arithmetic would be limited by modulus $x^h$ on the ring $\mathds{Z}[x] / \langle x^h \rangle$. However, a shortest $s$-$t$ path may have a length that is greater than $h$, so how would we recover such paths without defaulting to Floyd-Warshall's algorithm that takes $\bigO(n^3)$ time?
+In section~\ref{sec:3.4}, we covered how we can manipulate polynomial matrices to track \texttt{APSP} for path lengths up to length $h$ in $\displaystyle \tilde \bigO(h n^2)$ time per node update. One limitation of tracking the \texttt{APSP} using $A^{\prime \prime}$ from section~\ref{sec:3.3.3} is that we only track shortest $s$-$t$ paths of length $h$, since we assumed that all polynomial arithmetic would be limited by modulus $x^h$ on the ring $\mathds{Z}[x] / \langle x^h \rangle$. However, a shortest $s$-$t$ path may have a length that is greater than $h$, so how would we recover such paths without defaulting to Floyd-Warshall's algorithm that takes $\bigO(n^3)$ time?
 
 To track the shortest paths of an arbitrary length $n$, we would need to find a way to deal with ``chunks'' of the path that are only of length $h$. A straightforward way to do this is to somehow subdivide the nodes of the graph $G$ into a new graph $H$ of $\frac{n}{h}$ nodes, where each node somehow is capable of representing a $\frac{n}{h}$ section of nodes from $G$. It turns out that we can subdivide the original graph $G$ by randomly sampling some $\frac{n}{h}$ nodes, with a high probability that shortest paths pass through the randomly sampled $\frac{n}{h}$ nodes of $H$.
 
